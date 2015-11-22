@@ -4,7 +4,10 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui\
+            sql
+
+CONFIG += qaxcontainer
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -13,8 +16,14 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp\
+        qexcel.cpp \
+    dboper.cpp \
+    fpdbproc.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h\
+            qexcel.h \
+    dboper.h \
+    fpdbproc.h
 
 FORMS    += mainwindow.ui

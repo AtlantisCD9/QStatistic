@@ -17,6 +17,39 @@ public:
     
 private:
     Ui::MainWindow *ui;
+
+    QAction *m_actionImportXls;
+    QAction *m_actionExportXls;
+    QMenu *m_menuFile;
+
+    QAction *m_actionWorkDaysSetting;
+    QMenu *m_menuConfig;
+
+    QAction *m_actionAbout;
+    QMenu *m_menuHelp;
+
+
+
+    QList<QVariant> m_strLstTitleContent;
+    QList<QList<QVariant> > m_lstStrLstContent;
+
+    bool getDataFromExcel();
+    bool setDataIntoExcel();
+
+    bool prepareDb();
+    bool getDataFromDb();
+    bool setDataIntoDb();
+
+
+
+    void procData();
+
+private slots:
+    void onImportFile();
+    void onExportFile();
+
+    void onAbout();
+
 };
 
 #endif // MAINWINDOW_H
