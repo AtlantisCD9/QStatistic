@@ -28,21 +28,13 @@ private:
     QAction *m_actionAbout;
     QMenu *m_menuHelp;
 
-
-
-    QList<QVariant> m_strLstTitleContent;
-    QList<QList<QVariant> > m_lstStrLstContent;
-
-    bool getDataFromExcel();
-    bool setDataIntoExcel();
+    void procData();
+    void getDataFromExcel();
+    void setDataIntoExcel();
 
     bool prepareDb();
     bool getDataFromDb();
     bool setDataIntoDb();
-
-
-
-    void procData();
 
 private slots:
     void onImportFile();

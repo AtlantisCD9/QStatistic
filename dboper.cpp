@@ -6,25 +6,7 @@
 #include <QSqlRecord>
 #include <QSqlError>
 
-DbOper *DbOper::m_pInstance = NULL;
-
-DbOper *DbOper::getInstance(QObject *parent)
-{
-    if(m_pInstance == NULL)//判断是否第一次调用
-    {
-        m_pInstance = new DbOper(parent);
-    }
-    return m_pInstance;
-}
-
-void DbOper::releaseInstance()
-{
-    if(NULL != m_pInstance)//判断是否已经释放
-    {
-        delete m_pInstance;
-        m_pInstance = NULL;
-    }
-}
+#include <QStringList>
 
 DbOper::DbOper(QObject *parent) :
     QObject(parent)
@@ -36,16 +18,15 @@ DbOper::~DbOper()
     delete m_pSqlDb;
 }
 
-bool DbOper::dbOpen()
+bool DbOper::dbOpen(const QString databaseName)
 {
     if (m_pSqlDb->isOpen())
     {
         return true;
     }
 
-    *m_pSqlDb = QSqlDatabase::addDatabase("QSQLITE");
-    //m_pSqlDb->setDatabaseName(":memory:");
-    m_pSqlDb->setDatabaseName("customdb");
+    *m_pSqlDb = QSqlDatabase::addDatabase("QSQLITE",databaseName);
+    m_pSqlDb->setDatabaseName(databaseName);
     return m_pSqlDb->open();
 }
 
@@ -122,4 +103,10 @@ bool DbOper::dbInsertData(QString &sqlStr, QList<QList<QVariant> > &lstRowsAllDa
     }
 
     return true;
+}
+
+QStringList DbOper::tablesInDb()
+{
+    //SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
+    return m_pSqlDb->tables();
 }

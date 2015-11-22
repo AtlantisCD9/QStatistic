@@ -10,31 +10,22 @@ class DbOper : public QObject
     Q_OBJECT
 
 public:
+    explicit DbOper(QObject *parent = 0);
     ~DbOper();
-    static DbOper *getInstance(QObject *parent = 0);
-    static void releaseInstance();
 
-
-    bool dbOpen();
+    bool dbOpen(const QString databaseName=":memory:");
     bool dbQureyExec(QString &sqlStr);
 
     bool dbQureyData(QString &sqlStr,QList<QList<QVariant> > &lstRowsAllData);
     bool dbInsertData(QString &sqlStr, QList<QList<QVariant> > &lstRowsAllData);
 
+    QStringList tablesInDb();
+
     //QSqlDatabase *getSqlDb(){return m_pSqlDb;}
 
 private:
-    explicit DbOper(QObject *parent = 0);
-    static DbOper *m_pInstance;
     QSqlDatabase *m_pSqlDb;
 
-
-
-    
-signals:
-    
-public slots:
-    
 };
 
 #endif // DBOPER_H
