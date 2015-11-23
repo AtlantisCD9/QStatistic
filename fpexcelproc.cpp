@@ -1,7 +1,6 @@
 #include "fpexcelproc.h"
 #include "qexcel.h"
 
-#include <QDateTime>
 #include <QFileDialog>
 #include <QProgressDialog>
 #include <QMessageBox>
@@ -11,29 +10,6 @@
 
 const int SheetID = 1;
 const int MaxRow = 100;
-const int OnDutyID = 7;
-const int OffDutyID = 8;
-
-
-FpExcelProc *FpExcelProc::m_pInstance = NULL;
-
-FpExcelProc *FpExcelProc::getInstance(QObject *parent)
-{
-    if(m_pInstance == NULL)//判断是否第一次调用
-    {
-        m_pInstance = new FpExcelProc(parent);
-    }
-    return m_pInstance;
-}
-
-void FpExcelProc::releaseInstance()
-{
-    if(NULL != m_pInstance)//判断是否已经释放
-    {
-        delete m_pInstance;
-        m_pInstance = NULL;
-    }
-}
 
 
 FpExcelProc::FpExcelProc(QObject *parent) :
@@ -43,63 +19,9 @@ FpExcelProc::FpExcelProc(QObject *parent) :
 
 FpExcelProc::~FpExcelProc()
 {
-    QExcel::releaseInstance();
 }
 
-void FpExcelProc::procData()
-{
-    for(int i=0;i<m_lstStrLstContent.size();++i)
-    {
-        QDateTime dtTimeFlag;
-        QDateTime dtStart = m_lstStrLstContent[i][OnDutyID].toDateTime();
-        QDateTime dtEnd = m_lstStrLstContent[i][OffDutyID].toDateTime();
-        if (dtStart.time() >= QTime(5,1))
-        {
-            dtTimeFlag = QDateTime(dtStart.date(),QTime(0,0));
-        }
-        else
-        {
-            dtTimeFlag = QDateTime(dtStart.date().addDays(-1),QTime(0,0));
-        }
-
-        //add timeflag
-        m_lstStrLstContent[i] << QVariant(dtTimeFlag);
-
-        //add total hour
-        if (!dtEnd.isNull())
-        {
-            m_lstStrLstContent[i] << QVariant(dtStart.secsTo(dtEnd)*1.0/3600);
-        }
-        else
-        {
-            m_lstStrLstContent[i] << QVariant(0.0);
-        }
-
-        //day of week
-        m_lstStrLstContent[i] << QVariant(dtTimeFlag.date().dayOfWeek());
-
-        //abnormal work hours:0,normal;1,abnormal;2,beLate or leaveEarly
-        if (dtEnd.isNull())
-        {
-            m_lstStrLstContent[i] << QVariant(1);
-        }
-        else
-        {
-            if(dtStart >= QDateTime(dtTimeFlag.date(),QTime(9,1))
-                    || dtEnd < QDateTime(dtTimeFlag.date(),QTime(17,30)))
-            {
-                m_lstStrLstContent[i] << QVariant(2);
-            }
-            else
-            {
-                m_lstStrLstContent[i] << QVariant(0);//normal
-            }
-        }
-        //qDebug() << m_lstStrLstContent[i];
-    }
-}
-
-bool FpExcelProc::getDataFromExcel()
+bool FpExcelProc::getDataFromExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent)
 {
     QString fileName = QFileDialog::getOpenFileName(0,
                                                     tr("Import Excel"),
@@ -117,8 +39,7 @@ bool FpExcelProc::getDataFromExcel()
         return false;
     }
 
-    QExcel::releaseInstance();
-    QExcel *pExcel = QExcel::getInstance(fileName);
+    QExcel *pExcel = new QExcel(fileName);
     if (!pExcel)
     {
         qDebug() << "Get Excel API Static Object Failed";
@@ -129,6 +50,7 @@ bool FpExcelProc::getDataFromExcel()
     if (pExcel->getSheetsCount() < 1)
     {
         QMessageBox::critical(0,"Error","Sheets Is Empty!");
+        delete pExcel;
         return false;
     }
     //取得第一个工作表
@@ -140,7 +62,7 @@ bool FpExcelProc::getDataFromExcel()
     //get title
     for (int i=topLeftRow,j=topLeftColumn;j<=bottomRightColumn;++j)
     {
-        m_strLstTitleContent << pExcel->getCellValue(i,j);
+        lstTitle << pExcel->getCellValue(i,j);
     }
     ++topLeftRow;
 
@@ -156,50 +78,57 @@ bool FpExcelProc::getDataFromExcel()
 
     for (int i=topLeftRow;i<=bottomRightRow;++i)
     {
-        m_lstStrLstContent << QList<QVariant>();
+        lstLstContent << QList<QVariant>();
         for (int j=topLeftColumn;j<=bottomRightColumn;++j)
         {
-            m_lstStrLstContent.last() << pExcel->getCellValue(i,j);
+            lstLstContent.last() << pExcel->getCellValue(i,j);
         }
         progress.setValue(i-topLeftRow);
         if (progress.wasCanceled())
         {
+            delete pExcel;
             return true;
         }
     }
     progress.setValue(bottomRightRow+1-topLeftRow);
 
+    delete pExcel;
+
+    QMessageBox::information(0,"Info",QString("Import Done: %1 ").arg(bottomRightRow+1-topLeftRow));
+
     return true;
 
-//    qDebug() << m_strLstTitleContent;
-//    foreach(QList<QVariant> strLstContent,m_lstStrLstContent)
+//    qDebug() << lstTitle;
+//    foreach(QList<QVariant> strLstContent,lstLstContent)
 //    {
 //        qDebug() << strLstContent;
 //    }
-//    qDebug() << m_lstStrLstContent.size();
+//    qDebug() << lstLstContent.size();
 }
 
-bool FpExcelProc::setDataIntoExcel()
+bool FpExcelProc::setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent)
 {
-    QString fileName = QFileDialog::getSaveFileName(0,
-                                                    tr("Export Excel"),
-                                                    QString(),
-                                                    tr("Excel Files (*.xlsx *.xls)"));
-    if (fileName.isNull())
+    //prepare for save as file name
+    QString fileSaveAsName = QFileDialog::getSaveFileName(0,
+                                                          tr("Export Excel"),
+                                                          QString(),
+                                                          tr("Excel Files (*.xlsx *.xls)"));
+    if (fileSaveAsName.isNull())
     {
         //user press cancel;
         return false;
     }
+    fileSaveAsName = QDir::toNativeSeparators(fileSaveAsName);
 
-    if (0 == m_lstStrLstContent.size())
+    if (0 == lstLstContent.size())
     {
-        QMessageBox::information(0,"info","没有需要到处的数据");
+        QMessageBox::information(0,"info","No Data Need To Export");
         return false;
     }
 
-    QString sourceFileName;
-    sourceFileName = QDir::currentPath()+"./xlsSource/month_total.xlsx";
-    sourceFileName = QDir::toNativeSeparators(QDir::cleanPath(fileName));
+    //load source xls
+    QString sourceFileName = QDir::currentPath()+"./xlsSource/month_total.xlsx";
+    sourceFileName = QDir::toNativeSeparators(QDir::cleanPath(sourceFileName));
 
     if (!QFile::exists(sourceFileName))
     {
@@ -207,8 +136,7 @@ bool FpExcelProc::setDataIntoExcel()
         return false;
     }
 
-    QExcel::releaseInstance();
-    QExcel *pExcel = QExcel::getInstance(fileName);
+    QExcel *pExcel = new QExcel(sourceFileName);
     if (!pExcel)
     {
         qDebug() << "Get Excel API Static Object Failed";
@@ -219,6 +147,7 @@ bool FpExcelProc::setDataIntoExcel()
     if (pExcel->getSheetsCount() < 1)
     {
         QMessageBox::critical(0,"Error","Sheets Is Empty!");
+        delete pExcel;
         return false;
     }
     //取得第一个工作表
@@ -226,9 +155,9 @@ bool FpExcelProc::setDataIntoExcel()
     //取得工作表已使用范围
     int topLeftRow, topLeftColumn, bottomRightRow, bottomRightColumn;
     topLeftRow = 5;
-    topLeftColumn = 0;
-    bottomRightRow = m_lstStrLstContent.size();
-    bottomRightColumn = m_strLstTitleContent.size();
+    topLeftColumn = 1;
+    bottomRightRow = lstLstContent.size();
+    bottomRightColumn = lstTitle.size();
 
     QProgressDialog progress("Exporting data...", "Abort Export", 0, bottomRightRow+1-topLeftRow, 0);
          progress.setWindowModality(Qt::WindowModal);
@@ -237,27 +166,33 @@ bool FpExcelProc::setDataIntoExcel()
     {
         for (int j=0;j<=bottomRightColumn-topLeftColumn;++j)
         {
-            pExcel->setCellVariant(i+topLeftRow, j+topLeftColumn, m_lstStrLstContent[i][j]);
+            pExcel->setCellVariant(i+topLeftRow, j+topLeftColumn, lstLstContent[i][j]);
         }
         progress.setValue(i-topLeftRow);
         if (progress.wasCanceled())
         {
+            delete pExcel;
             return true;
         }
     }
     progress.setValue(bottomRightRow+1-topLeftRow);
 
-    fileName = QDir::toNativeSeparators(fileName);
-    pExcel->saveAs(fileName,"51");
+
+    pExcel->saveAs(fileSaveAsName,"51");
+
+
+    delete pExcel;
+
+    QMessageBox::information(0,"Info",QString("Export Done: %1 ").arg(bottomRightRow+1-topLeftRow));
 
     return true;
 
-//    qDebug() << m_strLstTitleContent;
-//    foreach(QList<QVariant> strLstContent,m_lstStrLstContent)
+//    qDebug() << lstTitle;
+//    foreach(QList<QVariant> strLstContent,lstLstContent)
 //    {
 //        qDebug() << strLstContent;
 //    }
-//    qDebug() << m_lstStrLstContent.size();
+//    qDebug() << lstLstContent.size();
 
 
 

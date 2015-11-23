@@ -4,27 +4,6 @@
 
 #include <QStringList>
 
-
-FpDbProc *FpDbProc::m_pInstance = NULL;
-
-FpDbProc *FpDbProc::getInstance(QObject *parent)
-{
-    if(m_pInstance == NULL)//判断是否第一次调用
-    {
-        m_pInstance = new FpDbProc(parent);
-    }
-    return m_pInstance;
-}
-
-void FpDbProc::releaseInstance()
-{
-    if(NULL != m_pInstance)//判断是否已经释放
-    {
-        delete m_pInstance;
-        m_pInstance = NULL;
-    }
-}
-
 FpDbProc::FpDbProc(QObject *parent) :
     QObject(parent)
 {
@@ -34,17 +13,8 @@ FpDbProc::FpDbProc(QObject *parent) :
 
 FpDbProc::~FpDbProc()
 {
-    if (NULL != m_pDbOperMem)
-    {
-        delete m_pDbOperMem;
-        m_pDbOperMem = NULL;
-    }
-
-    if (NULL != m_pDbOperLocal)
-    {
-        delete m_pDbOperLocal;
-        m_pDbOperLocal = NULL;
-    }
+    delete m_pDbOperMem;
+    delete m_pDbOperLocal;
 }
 
 bool FpDbProc::prepareMemDb()

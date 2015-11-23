@@ -10,9 +10,8 @@ class QExcel : public QObject
 {
     Q_OBJECT
 public:
+    explicit QExcel(QString xlsFilePath, QObject *parent = 0);
     ~QExcel();
-    static QExcel *getInstance(QString xlsFilePath = QString(),QObject *parent = 0);
-    static void releaseInstance();
 
 public:
     QAxObject * getWorkBooks();
@@ -76,9 +75,6 @@ public:
     void saveAs(const QString& fileName, const QString &fileFormat);
 
 private:
-    explicit QExcel(QString xlsFilePath, QObject *parent = 0);
-    static QExcel *m_pInstance;
-
     QAxObject * m_excel;
     QAxObject * m_workBooks;
     QAxObject * m_workBook;

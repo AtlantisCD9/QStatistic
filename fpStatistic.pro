@@ -20,12 +20,14 @@ SOURCES += main.cpp\
         qexcel.cpp \
     dboper.cpp \
     fpdbproc.cpp \
-    fpexcelproc.cpp
+    fpexcelproc.cpp \
+    fpdataproc.cpp
 
 HEADERS  += mainwindow.h\
             qexcel.h \
     dboper.h \
     fpdbproc.h \
-    fpexcelproc.h
+    fpexcelproc.h \
+    fpdataproc.h
 
 FORMS    += mainwindow.ui

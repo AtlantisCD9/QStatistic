@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+class FpDataProc;
+
 namespace Ui {
 class MainWindow;
 }
@@ -28,13 +30,15 @@ private:
     QAction *m_actionAbout;
     QMenu *m_menuHelp;
 
+    FpDataProc *m_pFpDataProc;
+
     void procData();
     void getDataFromExcel();
     void setDataIntoExcel();
 
-    bool prepareDb();
-    bool getDataFromDb();
-    bool setDataIntoDb();
+    void prepareDb();
+    void getDataFromDb();
+    void setDataIntoDb();
 
 private slots:
     void onImportFile();

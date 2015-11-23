@@ -6,36 +6,6 @@
 
 #include "qexcel.h"
 
-QExcel *QExcel::m_pInstance = NULL;
-
-QExcel *QExcel::getInstance(QString xlsFilePath, QObject *parent)
-{
-    if(m_pInstance == NULL)//判断是否第一次调用
-    {
-        QFile file(xlsFilePath);
-        if (file.exists())
-        {
-            m_pInstance = new QExcel(xlsFilePath,parent);
-        }
-        else
-        {
-            qDebug() << "The File Does Not Exist:" << xlsFilePath;
-        }
-
-    }
-    return m_pInstance;
-}
-
-void QExcel::releaseInstance()
-{
-    if(NULL != m_pInstance)//判断是否已经释放
-    {
-        delete m_pInstance;
-        m_pInstance = NULL;
-    }
-}
-
-
 QExcel::QExcel(QString xlsFilePath, QObject *parent)
 {
     m_excel = 0;
@@ -55,6 +25,8 @@ QExcel::QExcel(QString xlsFilePath, QObject *parent)
                 this,SLOT(onQExcelException(int,QString,QString,QString)));
 
         m_sheets = m_workBook->querySubObject("WorkSheets");
+        connect(m_workBook,SIGNAL(exception(int,QString,QString,QString)),
+                this,SLOT(onQExcelException(int,QString,QString,QString)));
     }
 }
 

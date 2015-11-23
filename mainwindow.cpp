@@ -1,13 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-//#include "qexcel.h"
-#include "fpdbproc.h"
-#include "fpexcelproc.h"
+#include "fpdataproc.h"
 
 #include <QDebug>
-#include <QString>
-#include <QList>
 #include <QMessageBox>
 
 
@@ -17,7 +13,8 @@ const QString FP_VERSION_NUM = "0.1.0.0";
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_pFpDataProc(new FpDataProc)
 {
     ui->setupUi(this);
 
@@ -88,9 +85,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    FpDbProc::releaseInstance();
-    FpExcelProc::releaseInstance();
-
+    delete m_pFpDataProc;
     delete ui;
 }
 
@@ -119,51 +114,30 @@ void MainWindow::onExportFile()
 
 void MainWindow::procData()
 {
-    FpExcelProc *pFpExcelProc = FpExcelProc::getInstance();
-    pFpExcelProc->procData();
+    m_pFpDataProc->procData();
 }
 
 void MainWindow::getDataFromExcel()
 {
-    FpExcelProc *pFpExcelProc = FpExcelProc::getInstance();
-    pFpExcelProc->getDataFromExcel();
+    m_pFpDataProc->getDataFromExcel();
 }
 
 void MainWindow::setDataIntoExcel()
 {
-    FpExcelProc *pFpExcelProc = FpExcelProc::getInstance();
-    pFpExcelProc->setDataIntoExcel();
+    m_pFpDataProc->setDataIntoExcel();
 }
 
-bool MainWindow::prepareDb()
+void MainWindow::prepareDb()
 {
-    bool retRes = true;
-    FpDbProc *pFpDbProc = FpDbProc::getInstance();
-
-    retRes  = retRes && pFpDbProc->prepareMemDb();
-    retRes  = retRes && pFpDbProc->prepareLocalDb();
-
-    return retRes;
+    m_pFpDataProc->prepareDb();
 }
 
-bool MainWindow::getDataFromDb()
+void MainWindow::getDataFromDb()
 {
-    bool retRes = true;
-    FpDbProc *pFpDbProc = FpDbProc::getInstance();
-
-    QList<QList<QVariant> > lstAllRes;
-    retRes = retRes && pFpDbProc->getDataFromMemDb(lstAllRes);
-
-    return retRes;
+    m_pFpDataProc->getDataFromDb();
 }
 
-bool MainWindow::setDataIntoDb()
+void MainWindow::setDataIntoDb()
 {
-    bool retRes = true;
-    FpDbProc *pFpDbProc = FpDbProc::getInstance();
-
-    QList<QList<QVariant> > lstAllRes;
-    retRes = retRes && pFpDbProc->setDataIntoMemDb(lstAllRes);
-
-    return retRes;
+    m_pFpDataProc->setDataIntoDb();
 }
