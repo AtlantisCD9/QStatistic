@@ -13,22 +13,35 @@ public:
     explicit FpDataProc(QObject *parent = 0);
     ~FpDataProc();
 
+    //Data proc
     void procData();
+
+
+    //Excel proc
     void getDataFromExcel();
     void setDataIntoExcel();
 
-    void prepareDb();
-    void getDataFromDb();
-    void setDataIntoDb();
+    //Loacl Db
+
+    //Mem Db
+    void getDutyCollection();
+    void setDutyDetail();
+
+private:
+    //Loacl Db
+    void getWorkDays();
+    void setWorkDays();
     
 private:
     FpDbProc *m_pFpDbProc;
     FpExcelProc *m_pFpExcelProc;
 
-    QList<QVariant> m_lstTitle;
-    QList<QList<QVariant> > m_lstLstContent;
+    QList<QVariant> m_lstTitleExcel;
+    QList<QList<QVariant> > m_lstLstContentExcel;
 
-    QList<QList<QVariant> > m_lstLstContentDb;
+    QList<QList<QVariant> > m_lstLstContentWorkDays;
+
+    QList<QList<QVariant> > m_lstLstContentDutyCollection;
 
 signals:
     

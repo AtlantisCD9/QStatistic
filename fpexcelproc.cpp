@@ -108,6 +108,11 @@ bool FpExcelProc::getDataFromExcel(QList<QVariant> &lstTitle, QList<QList<QVaria
 
 bool FpExcelProc::setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent)
 {
+    if (0 == lstLstContent.size())
+    {
+        return true;
+    }
+
     //prepare for save as file name
     QString fileSaveAsName = QFileDialog::getSaveFileName(0,
                                                           tr("Export Excel"),
@@ -157,7 +162,7 @@ bool FpExcelProc::setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVaria
     topLeftRow = 5;
     topLeftColumn = 1;
     bottomRightRow = lstLstContent.size();
-    bottomRightColumn = lstTitle.size();
+    bottomRightColumn = lstLstContent.first().size();
 
     QProgressDialog progress("Exporting data...", "Abort Export", 0, bottomRightRow+1-topLeftRow, 0);
          progress.setWindowModality(Qt::WindowModal);

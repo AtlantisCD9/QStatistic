@@ -20,44 +20,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setWindowTitle("FP Statistic");
 
-    //set m_menuFile
-    m_actionImportXls = new QAction(this);
-    m_actionImportXls->setObjectName("m_actionImportXls");
-    m_actionImportXls->setText(tr("&Import Xls"));
-
-    m_actionExportXls = new QAction(this);
-    m_actionExportXls->setObjectName("m_actionExportXls");
-    m_actionExportXls->setText(tr("&Export Xls"));
-
-    m_menuFile = new QMenu(ui->menuBar);
-    m_menuFile->setObjectName("m_menuFile");
-    m_menuFile->setTitle(tr("&File"));
-
-    m_menuFile->addAction(m_actionImportXls);
-    m_menuFile->addAction(m_actionExportXls);
-
-    //set m_menuConfig
-    m_actionWorkDaysSetting = new QAction(this);
-    m_actionWorkDaysSetting->setObjectName("m_actionWorkDaysSetting");
-    m_actionWorkDaysSetting->setText(tr("&Work Days Setting"));
-
-    m_menuConfig = new QMenu(ui->menuBar);
-    m_menuConfig->setObjectName("m_menuConfig");
-    m_menuConfig->setTitle(tr("&Config"));
-
-    m_menuConfig->addAction(m_actionWorkDaysSetting);
-
-    //set m_menuHelp
-    m_actionAbout = new QAction(this);
-    m_actionAbout->setObjectName("m_actionAbout");
-    m_actionAbout->setText(tr("&About"));
-
-    m_menuHelp = new QMenu(ui->menuBar);
-    m_menuHelp->setObjectName("m_menuHelp");
-    m_menuHelp->setTitle(tr("&Help"));
-
-    m_menuHelp->addAction(m_actionAbout);
-
+    initialMenuFile();
+    initialMenuConfig();
+    initialMenuHelp();
 
     //add menus on menuBar
     ui->menuBar->addAction(m_menuFile->menuAction());
@@ -69,6 +34,8 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         ui->mainToolBar->setHidden(true);
     }
+
+    m_actionWorkDaysSetting->setDisabled(true);
 
 
     //set connection
@@ -89,6 +56,53 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::initialMenuFile()
+{
+    //set m_menuFile
+    m_actionImportXls = new QAction(this);
+    m_actionImportXls->setObjectName("m_actionImportXls");
+    m_actionImportXls->setText(tr("&Import Xls"));
+
+    m_actionExportXls = new QAction(this);
+    m_actionExportXls->setObjectName("m_actionExportXls");
+    m_actionExportXls->setText(tr("&Export Xls"));
+
+    m_menuFile = new QMenu(ui->menuBar);
+    m_menuFile->setObjectName("m_menuFile");
+    m_menuFile->setTitle(tr("&File"));
+
+    m_menuFile->addAction(m_actionImportXls);
+    m_menuFile->addAction(m_actionExportXls);
+}
+
+void MainWindow::initialMenuConfig()
+{
+    //set m_menuConfig
+    m_actionWorkDaysSetting = new QAction(this);
+    m_actionWorkDaysSetting->setObjectName("m_actionWorkDaysSetting");
+    m_actionWorkDaysSetting->setText(tr("&Work Days Setting"));
+
+    m_menuConfig = new QMenu(ui->menuBar);
+    m_menuConfig->setObjectName("m_menuConfig");
+    m_menuConfig->setTitle(tr("&Config"));
+
+    m_menuConfig->addAction(m_actionWorkDaysSetting);
+}
+
+void MainWindow::initialMenuHelp()
+{
+    //set m_menuHelp
+    m_actionAbout = new QAction(this);
+    m_actionAbout->setObjectName("m_actionAbout");
+    m_actionAbout->setText(tr("&About"));
+
+    m_menuHelp = new QMenu(ui->menuBar);
+    m_menuHelp->setObjectName("m_menuHelp");
+    m_menuHelp->setTitle(tr("&Help"));
+
+    m_menuHelp->addAction(m_actionAbout);
+}
+
 void MainWindow::onAbout()
 {
     QMessageBox::about(this,
@@ -98,46 +112,15 @@ void MainWindow::onAbout()
 
 void MainWindow::onImportFile()
 {
-    getDataFromExcel();
-    procData();
-//    prepareDb();
-//    setDataIntoDb();
-//    getDataFromDb();
+    m_pFpDataProc->getDataFromExcel();
+    m_pFpDataProc->procData();
+    m_pFpDataProc->setDutyDetail();
 }
 
 void MainWindow::onExportFile()
 {
-    //prepareExcel(false);
-    setDataIntoExcel();
-}
-
-
-void MainWindow::procData()
-{
-    m_pFpDataProc->procData();
-}
-
-void MainWindow::getDataFromExcel()
-{
-    m_pFpDataProc->getDataFromExcel();
-}
-
-void MainWindow::setDataIntoExcel()
-{
+    m_pFpDataProc->getDutyCollection();
     m_pFpDataProc->setDataIntoExcel();
 }
 
-void MainWindow::prepareDb()
-{
-    m_pFpDataProc->prepareDb();
-}
 
-void MainWindow::getDataFromDb()
-{
-    m_pFpDataProc->getDataFromDb();
-}
-
-void MainWindow::setDataIntoDb()
-{
-    m_pFpDataProc->setDataIntoDb();
-}

@@ -13,14 +13,19 @@ public:
     ~FpDbProc();
 
     bool prepareMemDb();
-    bool getDataFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
-    bool setDataIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool getDutyCollectionFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
 
     bool prepareLocalDb();
+    bool getWorkDaysFromLocalDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool setWorkDaysIntoLocalDb(QList<QList<QVariant> > &lstStrLstContent);
 
 private:
     DbOper *m_pDbOperMem;
     DbOper *m_pDbOperLocal;
+
+    bool m_bIsMemPrepared;
+    bool m_bIsLocalPrepared;
 
 };
 

@@ -32,13 +32,10 @@ private:
 
     FpDataProc *m_pFpDataProc;
 
-    void procData();
-    void getDataFromExcel();
-    void setDataIntoExcel();
-
-    void prepareDb();
-    void getDataFromDb();
-    void setDataIntoDb();
+private:
+    void initialMenuFile();
+    void initialMenuConfig();
+    void initialMenuHelp();
 
 private slots:
     void onImportFile();

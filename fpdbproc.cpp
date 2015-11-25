@@ -9,12 +9,16 @@ FpDbProc::FpDbProc(QObject *parent) :
 {
     m_pDbOperMem = new DbOper(parent);
     m_pDbOperLocal = new DbOper(parent);
+    m_bIsMemPrepared = false;
+    m_bIsLocalPrepared = false;
 }
 
 FpDbProc::~FpDbProc()
 {
     delete m_pDbOperMem;
     delete m_pDbOperLocal;
+    m_bIsMemPrepared = false;
+    m_bIsLocalPrepared = false;
 }
 
 bool FpDbProc::prepareMemDb()
@@ -22,6 +26,11 @@ bool FpDbProc::prepareMemDb()
     bool retRes = true;
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
+
+    if (m_bIsMemPrepared)
+    {
+        return retRes;
+    }
 
     retRes = retRes && dbOper->dbOpen();
     if (!retRes)
@@ -53,6 +62,11 @@ bool FpDbProc::prepareMemDb()
             ")";
     retRes  = retRes && dbOper->dbQureyExec(strSql);
 
+
+    if (retRes)
+    {
+        m_bIsMemPrepared = true;
+    }
     return retRes;
 }
 
@@ -61,6 +75,11 @@ bool FpDbProc::prepareLocalDb()
     bool retRes = true;
     QString strSql;
     DbOper *dbOper = m_pDbOperLocal;
+
+    if (m_bIsLocalPrepared)
+    {
+        return retRes;
+    }
 
     retRes = retRes && dbOper->dbOpen("loaclDb.sqlite");
     if (!retRes)
@@ -86,51 +105,48 @@ bool FpDbProc::prepareLocalDb()
         retRes  = retRes && dbOper->dbQureyExec(strSql);
     }
 
+    if (retRes)
+    {
+        m_bIsLocalPrepared = true;
+    }
     return retRes;
 }
 
-bool FpDbProc::getDataFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+bool FpDbProc::getDutyCollectionFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
 {
-    bool retRes = true;
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "SELECT DISTINCT poid,job_id,name,SUM(work_hours) "
-            "FROM duty_detail WHERE work_hours_type = 0 GROUP BY ID_number,poid ORDER BY poid,job_id";
-    retRes = retRes && dbOper->dbQureyData(strSql,lstStrLstContent);
-
-//    foreach(QList<QVariant> lstRes,lstStrLstContent)
-//    {
-//        qDebug() << lstRes;
-//    }
-
-
-
-    return retRes;
-
+    strSql = "SELECT DISTINCT poid,job_id,name,SUM(work_hours)"
+            " FROM duty_detail WHERE work_hours_type = 0 GROUP BY ID_number,poid ORDER BY poid,job_id";
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
 
-bool FpDbProc::setDataIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
+bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
 {
-    bool retRes = true;
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
     strSql = "INSERT INTO duty_detail VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-    retRes = retRes && dbOper->dbInsertData(strSql,lstStrLstContent);
+    return dbOper->dbInsertData(strSql,lstStrLstContent);
+}
 
-    return retRes;
+bool FpDbProc::getWorkDaysFromLocalDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperLocal;
 
+    strSql = "SELECT e_date,type"
+            " FROM work_days"
+            " ORDER BY e_date";
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
 
+bool FpDbProc::setWorkDaysIntoLocalDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperLocal;
 
-//    QList<QList<QVariant> > lstResult;
-//    strSql = QString("select * from duty_detail");
-//    dbOper->dbQurey(strSql,lstResult);
-//    qDebug() << lstResult;
-
-
-
-//    DbOper::releaseInstance();
-
-
+    strSql = "INSERT INTO work_days VALUES(?,?)";
+    return dbOper->dbInsertData(strSql,lstStrLstContent);
 }
