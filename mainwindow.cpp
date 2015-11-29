@@ -5,6 +5,7 @@
 
 #include <QDebug>
 #include <QMessageBox>
+#include <QSqlTableModel>
 
 
 const QString FP_VERSION_NUM = "0.1.0.0";
@@ -115,6 +116,19 @@ void MainWindow::onImportFile()
     m_pFpDataProc->getDataFromExcel();
     m_pFpDataProc->procData();
     m_pFpDataProc->setDutyDetail();
+
+    QSqlDatabase db = QSqlDatabase::database(":memory:");
+    QSqlTableModel *model = new QSqlTableModel(this, db);
+     model->setTable("duty_detail");
+     //model->setEditStrategy(QSqlTableModel::OnManualSubmit);
+     model->select();
+//         model->setHeaderData(0, Qt::Horizontal, tr("Name"));
+//         model->setHeaderData(1, Qt::Horizontal, tr("Salary"));
+
+     ui->tableView->setModel(model);
+//         view->setModel(model);
+//         view->hideColumn(0); // don't show the ID
+     ui->tableView->show();
 }
 
 void MainWindow::onExportFile()

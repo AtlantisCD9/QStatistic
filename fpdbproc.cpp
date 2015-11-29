@@ -151,8 +151,8 @@ bool FpDbProc::getDutyCollectionFromMemDb(QList<QList<QVariant> > &lstStrLstCont
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "SELECT DISTINCT poid,job_id,name,SUM(work_hours)"
-            " FROM duty_detail WHERE work_hours_type = 0 GROUP BY ID_number,poid ORDER BY poid,job_id";
+    strSql = "SELECT DISTINCT poid,job_id,name,SUM(punch_hours)"
+            " FROM duty_detail WHERE punch_type = 0 GROUP BY ID_number,poid ORDER BY poid,job_id";
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
 

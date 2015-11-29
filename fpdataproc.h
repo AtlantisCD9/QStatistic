@@ -16,9 +16,6 @@ public:
     //Data proc
     void procData();
 
-    void procAbnormal();
-
-
     //Excel proc
     void getDataFromExcel();
     void setDataIntoExcel();
