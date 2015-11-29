@@ -55,12 +55,39 @@ bool FpDbProc::prepareMemDb()
             "    ID_number           VCHAR Not Null,   "
             "    POID                VCHAR,            "
             "    timeflag            DATETIME,         "
-            "    work_hours          DOUBLE,           "
             "    day_of_week         INT,              "
-            "    work_hours_type     INT,              "
+            "    punch_hours         DOUBLE,           "
+            "    payroll_multi       INT,              "
+            "    charge_hours        DOUBLE,           "
+            "    punch_type          INT,              "
             "    PRIMARY KEY(ID_number,timeflag)       "
             ")";
     retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+    if (!dbOper->tablesInDb().contains("days_payroll_multi"))
+    {
+        strSql = "CREATE TABLE payroll_multi ("
+                "    multiples  INT NOT NULL,"
+                "    descrip    VCHAR DEFAULT '',"
+                "    PRIMARY    KEY(multiples)"
+                ")";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (1,'工作日');";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (2,'双休日');";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (3,'节假日')";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+        strSql = "CREATE TABLE days_payroll_multi ("
+                "    e_date     DATE NOT NULL,"
+                "    multiples  INT DEFAULT 0,"
+                "    PRIMARY KEY(e_date),"
+                "    FOREIGN KEY(multiples) REFERENCES payroll_multi(multiples)"
+                ")";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+    }
 
 
     if (retRes)
@@ -87,20 +114,27 @@ bool FpDbProc::prepareLocalDb()
         return retRes;
     }
 
-    if (!m_pDbOperLocal->tablesInDb().contains("work_days"))
+    if (!dbOper->tablesInDb().contains("days_payroll_multi"))
     {
-        strSql = "CREATE TABLE days_type ("
-                "    type    INT NOT NULL,"
-                "    descrip VCHAR DEFAULT '',"
-                "    PRIMARY KEY(type)"
+        strSql = "CREATE TABLE payroll_multi ("
+                "    multiples  INT NOT NULL,"
+                "    descrip    VCHAR DEFAULT '',"
+                "    PRIMARY    KEY(multiples)"
                 ")";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
 
-        strSql = "CREATE TABLE work_days ("
-                "    e_date  DATE NOT NULL,"
-                "    type    INT DEFAULT 0,"
+        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (1,'工作日');";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (2,'双休日');";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (3,'节假日')";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+        strSql = "CREATE TABLE days_payroll_multi ("
+                "    e_date     DATE NOT NULL,"
+                "    multiples  INT DEFAULT 0,"
                 "    PRIMARY KEY(e_date),"
-                "    FOREIGN KEY(type) REFERENCES days_type(type)"
+                "    FOREIGN KEY(multiples) REFERENCES payroll_multi(multiples)"
                 ")";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
     }
@@ -127,7 +161,16 @@ bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "INSERT INTO duty_detail VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    strSql = "INSERT INTO duty_detail VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    return dbOper->dbInsertData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "INSERT INTO days_payroll_multi VALUES(?,?)";
     return dbOper->dbInsertData(strSql,lstStrLstContent);
 }
 
@@ -136,8 +179,19 @@ bool FpDbProc::getWorkDaysFromLocalDb(QList<QList<QVariant> > &lstStrLstContent)
     QString strSql;
     DbOper *dbOper = m_pDbOperLocal;
 
-    strSql = "SELECT e_date,type"
-            " FROM work_days"
+    strSql = "SELECT e_date,multiples"
+            " FROM days_payroll_multi"
+            " ORDER BY e_date";
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getWorkDaysFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "SELECT e_date,multiples"
+            " FROM days_payroll_multi"
             " ORDER BY e_date";
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
@@ -147,6 +201,6 @@ bool FpDbProc::setWorkDaysIntoLocalDb(QList<QList<QVariant> > &lstStrLstContent)
     QString strSql;
     DbOper *dbOper = m_pDbOperLocal;
 
-    strSql = "INSERT INTO work_days VALUES(?,?)";
+    strSql = "INSERT INTO days_payroll_multi VALUES(?,?)";
     return dbOper->dbInsertData(strSql,lstStrLstContent);
 }

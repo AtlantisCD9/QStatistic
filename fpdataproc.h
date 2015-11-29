@@ -16,6 +16,8 @@ public:
     //Data proc
     void procData();
 
+    void procAbnormal();
+
 
     //Excel proc
     void getDataFromExcel();
@@ -27,6 +29,8 @@ public:
     void getDutyCollection();
     void setDutyDetail();
 
+    void syncWorkDays();
+
 private:
     //Loacl Db
     void getWorkDays();
@@ -36,12 +40,20 @@ private:
     FpDbProc *m_pFpDbProc;
     FpExcelProc *m_pFpExcelProc;
 
-    QList<QVariant> m_lstTitleExcel;
-    QList<QList<QVariant> > m_lstLstContentExcel;
+    QList<QVariant> m_lstTitleDetail;
+    QList<QList<QVariant> > m_lstRowLstColumnDetail;
 
-    QList<QList<QVariant> > m_lstLstContentWorkDays;
+    //´ò¿¨È±Ê§¼ÇÂ¼
+    QList<QVariant> m_lstTitleDetailMissPunchIn;
+    QList<QList<QVariant> > m_lstRowLstColumnDetailMissPunchIn;
 
-    QList<QList<QVariant> > m_lstLstContentDutyCollection;
+    //³Ùµ½ÔçÍË
+    QList<QVariant> m_lstTitleDetailBelateOrleaveEarly;
+    QList<QList<QVariant> > m_lstRowLstColumnDetailBelateOrleaveEarly;
+
+    QList<QList<QVariant> > m_lstRowLstColumnWorkDays;
+
+    QList<QList<QVariant> > m_lstRowLstColumnDutyCollection;
 
 signals:
     

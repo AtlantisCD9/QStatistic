@@ -15,6 +15,8 @@ public:
     bool prepareMemDb();
     bool getDutyCollectionFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
     bool setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool getWorkDaysFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
 
     bool prepareLocalDb();
     bool getWorkDaysFromLocalDb(QList<QList<QVariant> > &lstStrLstContent);
