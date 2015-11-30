@@ -28,6 +28,7 @@ HEADERS  += mainwindow.h\
     dboper.h \
     fpdbproc.h \
     fpexcelproc.h \
-    fpdataproc.h
+    fpdataproc.h \
+    globaldef.h
 
 FORMS    += mainwindow.ui

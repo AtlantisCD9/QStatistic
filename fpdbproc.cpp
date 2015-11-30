@@ -3,6 +3,25 @@
 #include "dboper.h"
 
 #include <QStringList>
+#include <QString>
+
+
+const QString detailSQLTmp =
+        QString("SELECT company,area,product_line,sub_product_line,"
+                " PDU_SPDT,job_id,name,on_duty,off_duty,collaboration_type,ID_number,POID"
+                " FROM duty_detail %1");
+
+const QString FpDbProc::m_strDetailSQL = detailSQLTmp.arg("");
+
+const QString FpDbProc::m_strDetailBelateOrLeaveEarlySQL =
+        detailSQLTmp.arg("WHERE punch_type = 1");
+
+const QString FpDbProc::m_strDetailMissPunchInSQL =
+        detailSQLTmp.arg("WHERE punch_type = 2");
+
+const QString FpDbProc::m_strCollectionSQL =
+        "SELECT * FROM duty_collection";
+
 
 FpDbProc::FpDbProc(QObject *parent) :
     QObject(parent)
@@ -90,6 +109,20 @@ bool FpDbProc::prepareMemDb()
     }
 
 
+    strSql = "CREATE TABLE duty_collection (               "
+            "    company             VCHAR,            "
+            "    area                VCHAR,            "
+            "    product_line        VCHAR,            "
+            /*"    year_month          date,             "*/
+            "    POID                VCHAR,            "
+            "    job_id              VCHAR,            "
+            "    name                VCHAR,            "
+            "    punch_hours         DOUBLE,           "
+            "    PRIMARY KEY(job_id,name)       "
+            ")";
+    retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+
     if (retRes)
     {
         m_bIsMemPrepared = true;
@@ -146,15 +179,26 @@ bool FpDbProc::prepareLocalDb()
     return retRes;
 }
 
-bool FpDbProc::getDutyCollectionFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+bool FpDbProc::getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
 {
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "SELECT DISTINCT poid,job_id,name,SUM(punch_hours)"
-            " FROM duty_detail WHERE punch_type = 0 GROUP BY ID_number,poid ORDER BY poid,job_id";
+    strSql = "SELECT DISTINCT company,area,product_line,poid,job_id,name,SUM(punch_hours)"
+            " FROM duty_detail WHERE punch_type IN (0,1) "
+            " GROUP BY ID_number,poid ORDER BY poid,job_id";
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
+
+bool FpDbProc::setDutyCollectionIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "INSERT INTO duty_collection VALUES(?,?,?,?,?,?,?)";
+    return dbOper->dbInsertData(strSql,lstStrLstContent);
+}
+
 
 bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
 {
@@ -167,40 +211,42 @@ bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
 
 bool FpDbProc::setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
 {
-    QString strSql;
-    DbOper *dbOper = m_pDbOperMem;
-
-    strSql = "INSERT INTO days_payroll_multi VALUES(?,?)";
-    return dbOper->dbInsertData(strSql,lstStrLstContent);
-}
-
-bool FpDbProc::getWorkDaysFromLocalDb(QList<QList<QVariant> > &lstStrLstContent)
-{
-    QString strSql;
-    DbOper *dbOper = m_pDbOperLocal;
-
-    strSql = "SELECT e_date,multiples"
-            " FROM days_payroll_multi"
-            " ORDER BY e_date";
-    return dbOper->dbQureyData(strSql,lstStrLstContent);
-}
-
-bool FpDbProc::getWorkDaysFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
-{
-    QString strSql;
-    DbOper *dbOper = m_pDbOperMem;
-
-    strSql = "SELECT e_date,multiples"
-            " FROM days_payroll_multi"
-            " ORDER BY e_date";
-    return dbOper->dbQureyData(strSql,lstStrLstContent);
+    return setWorkDaysIntoDb(lstStrLstContent,m_pDbOperMem);
 }
 
 bool FpDbProc::setWorkDaysIntoLocalDb(QList<QList<QVariant> > &lstStrLstContent)
 {
+    return setWorkDaysIntoDb(lstStrLstContent,m_pDbOperLocal);
+}
+
+bool FpDbProc::setWorkDaysIntoDb(QList<QList<QVariant> > &lstStrLstContent, DbOper *argDbOper)
+{
     QString strSql;
-    DbOper *dbOper = m_pDbOperLocal;
+    DbOper *dbOper = argDbOper;
 
     strSql = "INSERT INTO days_payroll_multi VALUES(?,?)";
     return dbOper->dbInsertData(strSql,lstStrLstContent);
 }
+
+bool FpDbProc::getWorkDaysFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    return getWorkDaysFromDb(lstStrLstContent,m_pDbOperMem);
+}
+
+bool FpDbProc::getWorkDaysFromLocalDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    return getWorkDaysFromDb(lstStrLstContent,m_pDbOperLocal);
+}
+
+bool FpDbProc::getWorkDaysFromDb(QList<QList<QVariant> > &lstStrLstContent, DbOper *argDbOper)
+{
+    QString strSql;
+    DbOper *dbOper = argDbOper;
+
+    strSql = "SELECT e_date,multiples"
+            " FROM days_payroll_multi"
+            " ORDER BY e_date";
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+

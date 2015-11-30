@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+#include "globaldef.h"
+
 class QSqlDatabase;
 
 class DbOper : public QObject
@@ -13,7 +15,7 @@ public:
     explicit DbOper(QObject *parent = 0);
     ~DbOper();
 
-    bool dbOpen(const QString databaseName=":memory:");
+    bool dbOpen(const QString databaseName=DB_NAME);
     bool dbQureyExec(QString &sqlStr);
 
     bool dbQureyData(QString &sqlStr,QList<QList<QVariant> > &lstRowsAllData);

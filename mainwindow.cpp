@@ -2,10 +2,12 @@
 #include "ui_mainwindow.h"
 
 #include "fpdataproc.h"
+#include "globaldef.h"
 
 #include <QDebug>
 #include <QMessageBox>
-#include <QSqlTableModel>
+#include <QSqlQueryModel>
+#include <QSqlError>
 
 
 const QString FP_VERSION_NUM = "0.1.0.0";
@@ -111,30 +113,147 @@ void MainWindow::onAbout()
                        QString(tr("FP Statistic Tool\nVersion %1").arg(FP_VERSION_NUM)));
 }
 
+void MainWindow::showDetail(QTableView *tableWidget)
+{
+    if (NULL == tableWidget)
+    {
+        return;
+    }
+
+    QSqlDatabase db = QSqlDatabase::database(DB_NAME);
+    QSqlQueryModel *model = new QSqlQueryModel(this);
+    model->setQuery(m_pFpDataProc->getDutyDetailSQL(),db);
+
+    if(model->lastError().isValid())
+    {
+        qDebug() << model->lastError();
+    }
+
+    int iSize = m_pFpDataProc->getDutyDetailTitle().size();
+    for(int i = 0;i < iSize;++i)
+    {
+        model->setHeaderData(i, Qt::Horizontal, m_pFpDataProc->getDutyDetailTitle()[i].toString());
+    }
+    tableWidget->setModel(model);
+    tableWidget->setColumnWidth(0,50);
+    tableWidget->setColumnWidth(1,50);
+    tableWidget->setColumnWidth(6,60);
+    tableWidget->setColumnWidth(7,150);
+    tableWidget->setColumnWidth(8,150);
+    tableWidget->setColumnWidth(10,150);
+    tableWidget->show();
+}
+
+void MainWindow::showDetailBelateOrLeaveEarly(QTableView *tableWidget)
+{
+    if (NULL == tableWidget)
+    {
+        return;
+    }
+
+    QSqlDatabase db = QSqlDatabase::database(DB_NAME);
+    QSqlQueryModel *model = new QSqlQueryModel(this);
+    model->setQuery(m_pFpDataProc->getDutyDetailBelateOrLeaveEarlySQL(),db);
+
+    if(model->lastError().isValid())
+    {
+        qDebug() << model->lastError();
+    }
+
+    int iSize = m_pFpDataProc->getDutyDetailTitle().size();
+    for(int i = 0;i < iSize;++i)
+    {
+        model->setHeaderData(i, Qt::Horizontal, m_pFpDataProc->getDutyDetailTitle()[i].toString());
+    }
+
+    tableWidget->setModel(model);
+    tableWidget->setColumnWidth(0,50);
+    tableWidget->setColumnWidth(1,50);
+    tableWidget->setColumnWidth(6,60);
+    tableWidget->setColumnWidth(7,150);
+    tableWidget->setColumnWidth(8,150);
+    tableWidget->setColumnWidth(10,150);
+    tableWidget->show();
+}
+
+void MainWindow::showDetailMissPunchIn(QTableView *tableWidget)
+{
+    if (NULL == tableWidget)
+    {
+        return;
+    }
+
+    QSqlDatabase db = QSqlDatabase::database(DB_NAME);
+    QSqlQueryModel *model = new QSqlQueryModel(this);
+    model->setQuery(m_pFpDataProc->getDutyDetailMissPunchInSQL(),db);
+
+    if(model->lastError().isValid())
+    {
+        qDebug() << model->lastError();
+    }
+
+    int iSize = m_pFpDataProc->getDutyDetailTitle().size();
+    for(int i = 0;i < iSize;++i)
+    {
+        model->setHeaderData(i, Qt::Horizontal, m_pFpDataProc->getDutyDetailTitle()[i].toString());
+    }
+
+    tableWidget->setModel(model);
+    tableWidget->setColumnWidth(0,50);
+    tableWidget->setColumnWidth(1,50);
+    tableWidget->setColumnWidth(6,60);
+    tableWidget->setColumnWidth(7,150);
+    tableWidget->setColumnWidth(8,150);
+    tableWidget->setColumnWidth(10,150);
+    tableWidget->show();
+}
+
+void MainWindow::showCollection(QTableView *tableWidget)
+{
+    if (NULL == tableWidget)
+    {
+        return;
+    }
+
+    QSqlDatabase db = QSqlDatabase::database(DB_NAME);
+    QSqlQueryModel *model = new QSqlQueryModel(this);
+    model->setQuery(m_pFpDataProc->getDutyColletionSQL(),db);
+
+    if(model->lastError().isValid())
+    {
+        qDebug() << model->lastError();
+    }
+
+    int iSize = m_pFpDataProc->getDutyColletionTitle().size();
+    for(int i = 0;i < iSize;++i)
+    {
+        model->setHeaderData(i, Qt::Horizontal, m_pFpDataProc->getDutyColletionTitle()[i].toString());
+    }
+
+    tableWidget->setModel(model);
+    tableWidget->show();
+}
+
 void MainWindow::onImportFile()
 {
-    m_pFpDataProc->getDataFromExcel();
-    m_pFpDataProc->procData();
-    m_pFpDataProc->setDutyDetail();
+    //m_pFpDataProc->getDataFromExcel();
+    //m_pFpDataProc->procDataForDatail();
+    //m_pFpDataProc->setDutyDetail();
 
-    QSqlDatabase db = QSqlDatabase::database(":memory:");
-    QSqlTableModel *model = new QSqlTableModel(this, db);
-     model->setTable("duty_detail");
-     //model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-     model->select();
-//         model->setHeaderData(0, Qt::Horizontal, tr("Name"));
-//         model->setHeaderData(1, Qt::Horizontal, tr("Salary"));
+    m_pFpDataProc->getDistinctPersonal();
+    m_pFpDataProc->procDataForCollection();
+    m_pFpDataProc->setDutyCollection();
 
-     ui->tableView->setModel(model);
-//         view->setModel(model);
-//         view->hideColumn(0); // don't show the ID
-     ui->tableView->show();
+    showDetail(ui->tableView_detail);
+    showDetailBelateOrLeaveEarly(ui->tableView_beLateOrLeaveEarly);
+    showDetailMissPunchIn(ui->tableView_missPunchIn);
+    showCollection(ui->tableView_monthCollect);
 }
 
 void MainWindow::onExportFile()
 {
-    m_pFpDataProc->getDutyCollection();
-    m_pFpDataProc->setDataIntoExcel();
+//    m_pFpDataProc->getDistinctPersonal();
+//    m_pFpDataProc->setDataIntoExcel();
 }
 
 

@@ -30,16 +30,13 @@ FpDataProc::~FpDataProc()
 }
 
 
-void FpDataProc::procData()
+void FpDataProc::procDataForDatail()
 {
     QMap<QDate,int> mapDate2Type;
     foreach(QList<QVariant> workDay,m_lstRowLstColumnWorkDays)
     {
         mapDate2Type[workDay[0].toDate()] = workDay[1].toInt();
     }
-
-    m_lstTitleDetailMissPunchIn = m_lstTitleDetail;
-    m_lstTitleDetailBelateOrleaveEarly = m_lstTitleDetail;
 
     //QList<QVariant> lstTitle;
     for(int i=0;i<m_lstRowLstColumnDetail.size();++i)
@@ -79,17 +76,17 @@ void FpDataProc::procData()
         m_lstRowLstColumnDetail[i] << QVariant(0.0);
 
 
-        //punch_type:0,normal;1,abnormal;2,beLate or leaveEarly
+        //punch_type:0,normal;1,beLate or leaveEarly;2,abnormal;
         if (dtEnd.isNull())
         {
-            m_lstRowLstColumnDetail[i] << QVariant(1);//abnormal
+            m_lstRowLstColumnDetail[i] << QVariant(2);//abnormal
         }
         else
         {
             if(dtStart >= QDateTime(dtTimeFlag.date(),QTime(9,1))
                     || dtEnd < QDateTime(dtTimeFlag.date(),QTime(17,30)))
             {
-               m_lstRowLstColumnDetail[i] << QVariant(2);//beLate or leaveEarly
+               m_lstRowLstColumnDetail[i] << QVariant(1);//beLate or leaveEarly
             }
             else
             {
@@ -103,6 +100,11 @@ void FpDataProc::procData()
     }
 }
 
+void FpDataProc::procDataForCollection()
+{
+    ;
+}
+
 void FpDataProc::getDataFromExcel()
 {
     m_pFpExcelProc->getDataFromExcel(m_lstTitleDetail,m_lstRowLstColumnDetail);
@@ -110,11 +112,11 @@ void FpDataProc::getDataFromExcel()
 
 void FpDataProc::setDataIntoExcel()
 {
-    if (0 == m_lstRowLstColumnDutyCollection.size())
+    if (0 == m_lstRowLstColumnCollection.size())
     {
         return;
     }
-    m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnDutyCollection);
+    m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnCollection);
 }
 
 
@@ -142,7 +144,7 @@ void FpDataProc::syncWorkDays()
 //    qDebug() << lstRowLstColumnWorkDays;
 }
 
-void FpDataProc::setWorkDays()
+void FpDataProc::createWorkDays()
 {
     QList<QList<QVariant> > lstLstContentWorkDays;
     QMap<int,int> mapWeek2Type;
@@ -174,14 +176,38 @@ void FpDataProc::setWorkDays()
     m_pFpDbProc->setWorkDaysIntoLocalDb(lstLstContentWorkDays);
 }
 
-void FpDataProc::getDutyCollection()
+void FpDataProc::getDistinctPersonal()
 {
     if (!m_pFpDbProc->prepareMemDb())
     {
         qDebug() << "Db Open Failed";
         return;
     }
-    m_pFpDbProc->getDutyCollectionFromMemDb(m_lstRowLstColumnDutyCollection);
+    m_pFpDbProc->getDutyDistinctPersonalFromMemDb(m_lstRowLstColumnCollection);
+    //poid,job_id,name,SUM(punch_hours)
+    m_lstTitleCollection << tr("公司");
+    m_lstTitleCollection << tr("区域");
+    m_lstTitleCollection << tr("产品线");
+    m_lstTitleCollection << tr("POID");
+    m_lstTitleCollection << tr("工号");
+    m_lstTitleCollection << tr("姓名");
+    m_lstTitleCollection << tr("实际打卡工时");
+
+}
+
+void FpDataProc::setDutyCollection()
+{
+    if (0 == m_lstRowLstColumnCollection.size())
+    {
+        return;
+    }
+
+    if (!m_pFpDbProc->prepareMemDb())
+    {
+        qDebug() << "Db Open Failed";
+        return;
+    }
+    m_pFpDbProc->setDutyCollectionIntoMemDb(m_lstRowLstColumnCollection);
 }
 
 void FpDataProc::setDutyDetail()
@@ -197,4 +223,24 @@ void FpDataProc::setDutyDetail()
         return;
     }
     m_pFpDbProc->setDutyDetailIntoMemDb(m_lstRowLstColumnDetail);
+}
+
+const QString &FpDataProc::getDutyDetailSQL()
+{
+    return m_pFpDbProc->m_strDetailSQL;
+}
+
+const QString &FpDataProc::getDutyDetailBelateOrLeaveEarlySQL()
+{
+    return m_pFpDbProc->m_strDetailBelateOrLeaveEarlySQL;
+}
+
+const QString &FpDataProc::getDutyDetailMissPunchInSQL()
+{
+    return m_pFpDbProc->m_strDetailMissPunchInSQL;
+}
+
+const QString &FpDataProc::getDutyColletionSQL()
+{
+    return m_pFpDbProc->m_strCollectionSQL;
 }

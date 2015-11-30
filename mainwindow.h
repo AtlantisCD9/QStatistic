@@ -4,6 +4,7 @@
 #include <QMainWindow>
 
 class FpDataProc;
+class QTableView;
 
 namespace Ui {
 class MainWindow;
@@ -36,6 +37,12 @@ private:
     void initialMenuFile();
     void initialMenuConfig();
     void initialMenuHelp();
+
+    void showDetail(QTableView *tableWidget);
+    void showDetailBelateOrLeaveEarly(QTableView *tableWidget);
+    void showDetailMissPunchIn(QTableView *tableWidget);
+    void showCollection(QTableView *tableWidget);
+
 
 private slots:
     void onImportFile();

@@ -13,14 +13,28 @@ public:
     ~FpDbProc();
 
     bool prepareMemDb();
-    bool getDutyCollectionFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
-    bool setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
-    bool setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
-    bool getWorkDaysFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
-
     bool prepareLocalDb();
-    bool getWorkDaysFromLocalDb(QList<QList<QVariant> > &lstStrLstContent);
+
+    bool getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool setDutyCollectionIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+
+
+    bool setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
     bool setWorkDaysIntoLocalDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool getWorkDaysFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool getWorkDaysFromLocalDb(QList<QList<QVariant> > &lstStrLstContent);
+
+public:
+    const static QString m_strDetailSQL;
+    const static QString m_strDetailBelateOrLeaveEarlySQL;
+    const static QString m_strDetailMissPunchInSQL;
+    const static QString m_strCollectionSQL;
+
+private:
+    bool getWorkDaysFromDb(QList<QList<QVariant> > &lstStrLstContent,DbOper *argDbOper);
+    bool setWorkDaysIntoDb(QList<QList<QVariant> > &lstStrLstContent,DbOper *argDbOper);
+
 
 private:
     DbOper *m_pDbOperMem;

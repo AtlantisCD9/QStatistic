@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>517</width>
+    <height>383</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,51 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QTableView" name="tableView"/>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>3</number>
+      </property>
+      <widget class="QWidget" name="tab_detail">
+       <attribute name="title">
+        <string>全部明细流水</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QTableView" name="tableView_detail"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_beLateOrLeaveEarly">
+       <attribute name="title">
+        <string>迟到早退</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="0">
+         <widget class="QTableView" name="tableView_beLateOrLeaveEarly"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_missPunchIn">
+       <attribute name="title">
+        <string>打卡异常</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_4">
+        <item row="0" column="0">
+         <widget class="QTableView" name="tableView_missPunchIn"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_monthCollect">
+       <attribute name="title">
+        <string>月结汇总</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_5">
+        <item row="0" column="0">
+         <widget class="QTableView" name="tableView_monthCollect"/>
+        </item>
+       </layout>
+      </widget>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -25,7 +69,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
+     <width>517</width>
      <height>23</height>
     </rect>
    </property>
