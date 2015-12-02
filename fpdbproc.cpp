@@ -57,31 +57,31 @@ bool FpDbProc::prepareMemDb()
         return retRes;
     }
 
-    strSql = "DROP TABLE IF EXISTS duty_detail";
-    retRes  = retRes && dbOper->dbQureyExec(strSql);
+//    strSql = "DROP TABLE IF EXISTS duty_detail";
+//    retRes  = retRes && dbOper->dbQureyExec(strSql);
 
-    strSql = "CREATE TABLE duty_detail (               "
-            "    company             VCHAR,            "
-            "    area                VCHAR,            "
-            "    product_line        VCHAR,            "
-            "    sub_product_line    VCHAR,            "
-            "    PDU_SPDT            VCHAR,            "
-            "    job_id              VCHAR,            "
-            "    name                VCHAR,            "
-            "    on_duty             DATETIME,         "
-            "    off_duty            DATETIME,         "
-            "    collaboration_type  VCHAR,            "
-            "    ID_number           VCHAR Not Null,   "
-            "    POID                VCHAR,            "
-            "    timeflag            DATETIME,         "
-            "    day_of_week         INT,              "
-            "    punch_hours         DOUBLE,           "
-            "    payroll_multi       INT,              "
-            "    charge_hours        DOUBLE,           "
-            "    punch_type          INT,              "
-            "    PRIMARY KEY(ID_number,timeflag)       "
-            ")";
-    retRes  = retRes && dbOper->dbQureyExec(strSql);
+//    strSql = "CREATE TABLE duty_detail (               "
+//            "    company             VCHAR,            "
+//            "    area                VCHAR,            "
+//            "    product_line        VCHAR,            "
+//            "    sub_product_line    VCHAR,            "
+//            "    PDU_SPDT            VCHAR,            "
+//            "    job_id              VCHAR,            "
+//            "    name                VCHAR,            "
+//            "    on_duty             DATETIME,         "
+//            "    off_duty            DATETIME,         "
+//            "    collaboration_type  VCHAR,            "
+//            "    ID_number           VCHAR Not Null,   "
+//            "    POID                VCHAR,            "
+//            "    timeflag            DATETIME,         "
+//            "    day_of_week         INT,              "
+//            "    punch_hours         DOUBLE,           "
+//            "    payroll_multi       INT,              "
+//            "    charge_hours        DOUBLE,           "
+//            "    punch_type          INT,              "
+//            "    PRIMARY KEY(ID_number,timeflag)       "
+//            ")";
+//    retRes  = retRes && dbOper->dbQureyExec(strSql);
 
     if (!dbOper->tablesInDb().contains("days_payroll_multi"))
     {
