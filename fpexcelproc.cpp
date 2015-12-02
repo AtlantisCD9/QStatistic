@@ -9,7 +9,7 @@
 
 
 const int SheetID = 1;
-const int MaxRow = 10;
+const int MaxRow = -1;
 
 
 FpExcelProc::FpExcelProc(QObject *parent) :

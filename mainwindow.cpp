@@ -236,9 +236,9 @@ void MainWindow::showCollection(QTableView *tableWidget)
 
 void MainWindow::onImportFile()
 {
-    //m_pFpDataProc->getDataFromExcel();
-    //m_pFpDataProc->procDataForDatail();
-    //m_pFpDataProc->setDutyDetail();
+    m_pFpDataProc->getDataFromExcel();
+    m_pFpDataProc->procDataForDatail();
+    m_pFpDataProc->setDutyDetail();
 
     m_pFpDataProc->getDistinctPersonal();
     m_pFpDataProc->procDataForCollection();

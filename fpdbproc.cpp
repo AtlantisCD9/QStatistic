@@ -107,7 +107,14 @@ bool FpDbProc::prepareMemDb()
                 ")";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
     }
+    else
+    {
+        strSql = "DELETE FROM days_payroll_multi";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+    }
 
+    strSql = "DROP TABLE IF EXISTS duty_collection";
+    retRes  = retRes && dbOper->dbQureyExec(strSql);
 
     strSql = "CREATE TABLE duty_collection (               "
             "    company             VCHAR,            "
