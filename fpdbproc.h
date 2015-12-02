@@ -25,6 +25,12 @@ public:
     bool getWorkDaysFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
     bool getWorkDaysFromLocalDb(QList<QList<QVariant> > &lstStrLstContent);
 
+    bool getWorkDaysByCurMonthFromMemDb(QList<QList<QVariant> > &lstStrLstContent,const QString &strCurMonth);
+    bool getMinMaxMonthFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool getDutyDetailByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                          const QString &POID, const QString &IDNumber);
+
+
 public:
     const static QString m_strDetailSQL;
     const static QString m_strDetailBelateOrLeaveEarlySQL;

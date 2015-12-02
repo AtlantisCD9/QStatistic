@@ -102,7 +102,69 @@ void FpDataProc::procDataForDatail()
 
 void FpDataProc::procDataForCollection()
 {
-    ;
+    if (!getAndCheckCurMonth())
+    {
+        return;
+    }
+    QList<QList<QVariant> > lstStrLstContent;
+    m_pFpDbProc->getWorkDaysByCurMonthFromMemDb(lstStrLstContent,m_strDateMonth);
+
+    QMap<int,QString> mapInt2Descrp;
+    mapInt2Descrp[1] = tr("周一");//Monday
+    mapInt2Descrp[2] = tr("周二");
+    mapInt2Descrp[3] = tr("周三");
+    mapInt2Descrp[4] = tr("周四");
+    mapInt2Descrp[5] = tr("周五");
+    mapInt2Descrp[6] = tr("周六");
+    mapInt2Descrp[7] = tr("周日");//Sunday
+
+    foreach(QList<QVariant> workDay,lstStrLstContent)
+    {
+        //foreach add title
+        m_lstTitleCollection << mapInt2Descrp[workDay[0].toDate().dayOfWeek()];
+    }
+    qDebug() << m_lstTitleCollection;
+
+    const int maxRows = m_lstRowLstColumnCollection.size();
+
+    for(int i=0; i<maxRows; ++i)
+    {
+        if (m_lstRowLstColumnCollection[i].size() == 0)
+        {
+            continue;
+        }
+
+        QList<QVariant> &lstColumnCollection = m_lstRowLstColumnCollection[i];//maybe wrong
+        const QString POID = lstColumnCollection[3].toString();
+        const QString ID_number = lstColumnCollection.last().toString();
+
+        QList<QList<QVariant> > lstStrLstContentDutyDetail;
+
+        //timeflag charge_hours
+        m_pFpDbProc->getDutyDetailByPOIDIDNumberFromMemDb(lstStrLstContentDutyDetail,POID,ID_number);
+        QMap<QDate,QList<double> > mapDate2PunchIn;
+        foreach(QList<QVariant> lstDutyDetail,lstStrLstContentDutyDetail)
+        {
+            mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[1].toDouble();
+            mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[2].toDouble();
+        }
+
+        foreach(QList<QVariant> workDay,lstStrLstContent)
+        {
+            if (mapDate2PunchIn.contains(workDay[0].toDate()))
+            {
+                lstColumnCollection << QVariant(mapDate2PunchIn[workDay[0].toDate()][0]);
+                lstColumnCollection << QVariant(mapDate2PunchIn[workDay[0].toDate()][1]);
+            }
+            else
+            {
+                lstColumnCollection << 0;
+                lstColumnCollection << 0;
+            }
+        }
+        //qDebug() << lstColumnCollection;
+    }
+
 }
 
 void FpDataProc::getDataFromExcel()
@@ -244,3 +306,29 @@ const QString &FpDataProc::getDutyColletionSQL()
 {
     return m_pFpDbProc->m_strCollectionSQL;
 }
+
+
+bool FpDataProc::getAndCheckCurMonth()
+{
+    QList<QList<QVariant> > lstStrLstContent;
+    if (!m_pFpDbProc->getMinMaxMonthFromMemDb(lstStrLstContent))
+    {
+        return false;
+    }
+
+    if (lstStrLstContent.size() != 1 || lstStrLstContent[0].size() != 2)
+    {
+        return false;
+    }
+
+    if (lstStrLstContent[0][0].toDate().toString("yyyyMM")
+            == lstStrLstContent[0][1].toDate().toString("yyyyMM"))
+    {
+        m_strDateMonth = lstStrLstContent[0][0].toDate().toString("yyyyMM");
+        qDebug() << m_strDateMonth;
+        return true;
+    }
+
+    return false;
+}
+

@@ -4,6 +4,7 @@
 
 #include <QStringList>
 #include <QString>
+#include <QDateTime>
 
 
 const QString detailSQLTmp =
@@ -191,9 +192,9 @@ bool FpDbProc::getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrL
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "SELECT DISTINCT company,area,product_line,poid,job_id,name,SUM(punch_hours)"
+    strSql = "SELECT DISTINCT company,area,product_line,poid,name, round(SUM(punch_hours),2) as punchIn_h,ID_number"
             " FROM duty_detail WHERE punch_type IN (0,1) "
-            " GROUP BY ID_number,poid ORDER BY poid,job_id";
+            " GROUP BY poid,ID_number ORDER BY poid,name";
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
 
@@ -256,4 +257,36 @@ bool FpDbProc::getWorkDaysFromDb(QList<QList<QVariant> > &lstStrLstContent, DbOp
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
 
+bool FpDbProc::getWorkDaysByCurMonthFromMemDb(QList<QList<QVariant> > &lstStrLstContent, const QString &strCurMonth)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
 
+    strSql = QString("SELECT e_date,multiples"
+                     " FROM days_payroll_multi"
+                     " WHERE strftime('\%Y\%m', e_date) = '%1'"
+                     " ORDER BY e_date").arg(strCurMonth);
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getMinMaxMonthFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "SELECT min(timeflag),max(timeflag) FROM duty_detail";
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getDutyDetailByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                                    const QString &POID,const QString &IDNumber)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = QString("SELECT timeflag,round(punch_hours,2),round(punch_hours*payroll_multi,2) AS charge_h"
+                     " FROM duty_detail"
+                     " WHERE POID = '%1' AND ID_number = '%2' AND punch_type IN (0,1)"
+                     " ORDER BY timeflag").arg(POID).arg(IDNumber);
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}

@@ -43,10 +43,13 @@ private:
     //Loacl Db
     void getWorkDays();
     void createWorkDays();
+
+    bool getAndCheckCurMonth();//example:201510
     
 private:
     FpDbProc *m_pFpDbProc;
     FpExcelProc *m_pFpExcelProc;
+    QString m_strDateMonth;//format:201510
 
     QList<QVariant> m_lstTitleDetail;//明细抬头
     QList<QVariant> m_lstTitleCollection;//汇总抬头
