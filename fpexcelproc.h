@@ -11,7 +11,7 @@ public:
     ~FpExcelProc();
 
     bool getDataFromExcel(QList<QVariant> &lstTitle,QList<QList<QVariant> > &lstLstContent);
-    bool setDataIntoExcel(QList<QVariant> &lstTitle,QList<QList<QVariant> > &lstLstContent);
+    bool setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent, const int sheetID=1);
 
 };
 

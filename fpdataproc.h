@@ -13,6 +13,8 @@ public:
     explicit FpDataProc(QObject *parent = 0);
     ~FpDataProc();
 
+    void initial();
+
     //Data proc
     void procDataForDatail();
     void procDataForCollection();
@@ -30,12 +32,14 @@ public:
     const QString &getDutyDetailBelateOrLeaveEarlySQL();
     const QString &getDutyDetailMissPunchInSQL();
 
-
+    void getBelateOrLeaveEarlyDetail();
+    void getMissPunchInDetail();
     void getDistinctPersonal();
 
-    void setDutyCollection();
+    //void setDutyCollection();
     const QList<QVariant> &getDutyColletionTitle(){return m_lstTitleCollection;}
-    const QString &getDutyColletionSQL();
+    const QList<QList<QVariant> > &getDutyColletionLstRowLstColumn(){return m_lstRowLstColumnCollection;}
+//    const QString &getDutyColletionSQL();
 
     void syncWorkDays();
 
@@ -55,6 +59,9 @@ private:
     QList<QVariant> m_lstTitleCollection;//»ã×ÜÌ§Í·
 
     QList<QList<QVariant> > m_lstRowLstColumnDetail;//will be add some proc data
+
+    QList<QList<QVariant> > m_lstRowLstColumnBelateOrLeaveEarlyDetail;//will be add some proc data
+    QList<QList<QVariant> > m_lstRowLstColumnMissPunchInDetail;//will be add some proc data
 
     QList<QList<QVariant> > m_lstRowLstColumnCollection;//for month collection will be add some proc data
 

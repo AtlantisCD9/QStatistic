@@ -8,6 +8,8 @@
 #include <QMessageBox>
 #include <QSqlQueryModel>
 #include <QSqlError>
+#include <QStandardItemModel>
+#include <QStandardItem>
 
 
 const QString FP_VERSION_NUM = "0.1.0.0";
@@ -215,34 +217,47 @@ void MainWindow::showCollection(QTableView *tableWidget)
         return;
     }
 
-    QSqlDatabase db = QSqlDatabase::database(DB_NAME);
-    QSqlQueryModel *model = new QSqlQueryModel(this);
-    model->setQuery(m_pFpDataProc->getDutyColletionSQL(),db);
+    QStandardItemModel *model = new QStandardItemModel(this);
 
-    if(model->lastError().isValid())
+    QList<QList<QVariant> > lstRowLstColumnCollection =  m_pFpDataProc->getDutyColletionLstRowLstColumn();
+    foreach(QList<QVariant> lstColumn,lstRowLstColumnCollection)
     {
-        qDebug() << model->lastError();
+        QList<QStandardItem *> lstItem;
+        foreach(QVariant column,lstColumn)
+        {
+            QStandardItem *pItem = new QStandardItem();
+            pItem->setData(column,Qt::DisplayRole);
+            pItem->setEditable(false);
+            lstItem << pItem;
+        }
+        model->appendRow(lstItem);
     }
+
 
     int iSize = m_pFpDataProc->getDutyColletionTitle().size();
     for(int i = 0;i < iSize;++i)
     {
-        model->setHeaderData(i, Qt::Horizontal, m_pFpDataProc->getDutyColletionTitle()[i].toString());
+        model->setHeaderData(i, Qt::Horizontal, m_pFpDataProc->getDutyColletionTitle()[i]);
     }
 
     tableWidget->setModel(model);
+
+    tableWidget->setColumnWidth(4,150);
     tableWidget->show();
 }
 
 void MainWindow::onImportFile()
 {
+    m_pFpDataProc->initial();
 //    m_pFpDataProc->getDataFromExcel();
 //    m_pFpDataProc->procDataForDatail();
 //    m_pFpDataProc->setDutyDetail();
 
+    m_pFpDataProc->getBelateOrLeaveEarlyDetail();
+    m_pFpDataProc->getMissPunchInDetail();
+
     m_pFpDataProc->getDistinctPersonal();
     m_pFpDataProc->procDataForCollection();
-    m_pFpDataProc->setDutyCollection();
 
     showDetail(ui->tableView_detail);
     showDetailBelateOrLeaveEarly(ui->tableView_beLateOrLeaveEarly);
@@ -253,7 +268,7 @@ void MainWindow::onImportFile()
 void MainWindow::onExportFile()
 {
 //    m_pFpDataProc->getDistinctPersonal();
-//    m_pFpDataProc->setDataIntoExcel();
+    m_pFpDataProc->setDataIntoExcel();
 }
 
 

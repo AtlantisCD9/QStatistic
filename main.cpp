@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     QTextCodec *codec = QTextCodec::codecForName("GBK");
     QTextCodec::setCodecForTr(codec);
     //QTextCodec::setCodecForLocale(codec);
-    //QTextCodec::setCodecForCStrings(codec);
+    QTextCodec::setCodecForCStrings(codec);
 
     MainWindow win;
     win.showMaximized();

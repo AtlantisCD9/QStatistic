@@ -29,6 +29,18 @@ FpDataProc::~FpDataProc()
     delete m_pFpExcelProc;
 }
 
+void FpDataProc::initial()
+{
+    m_lstTitleDetail.clear();//明细抬头
+    m_lstTitleCollection.clear();//汇总抬头
+
+    m_lstRowLstColumnDetail.clear();//will be add some proc data
+
+    m_lstRowLstColumnBelateOrLeaveEarlyDetail.clear();//will be add some proc data
+    m_lstRowLstColumnMissPunchInDetail.clear();//will be add some proc data
+    m_lstRowLstColumnCollection.clear();//for month collection will be add some proc data
+}
+
 
 void FpDataProc::procDataForDatail()
 {
@@ -102,13 +114,16 @@ void FpDataProc::procDataForDatail()
 
 void FpDataProc::procDataForCollection()
 {
+    //检查是否处于某个月
     if (!getAndCheckCurMonth())
     {
         return;
     }
+    //如果是某个月，那么获取该月份的日历表
     QList<QList<QVariant> > lstStrLstContent;
     m_pFpDbProc->getWorkDaysByCurMonthFromMemDb(lstStrLstContent,m_strDateMonth);
 
+    //初始化dayOfWeek到文字描述映射
     QMap<int,QString> mapInt2Descrp;
     mapInt2Descrp[1] = tr("周一");//Monday
     mapInt2Descrp[2] = tr("周二");
@@ -121,9 +136,12 @@ void FpDataProc::procDataForCollection()
     foreach(QList<QVariant> workDay,lstStrLstContent)
     {
         //foreach add title
-        m_lstTitleCollection << mapInt2Descrp[workDay[0].toDate().dayOfWeek()];
+
+
+        m_lstTitleCollection << QVariant(QString("%1日%2\n打卡工时").arg(workDay[0].toDate().toString("dd")).arg(mapInt2Descrp[workDay[0].toDate().dayOfWeek()]));
+        m_lstTitleCollection << QVariant(QString("%1日%2\n付费工时").arg(workDay[0].toDate().toString("dd")).arg(mapInt2Descrp[workDay[0].toDate().dayOfWeek()]));
     }
-    qDebug() << m_lstTitleCollection;
+    //qDebug() << m_lstTitleCollection;
 
     const int maxRows = m_lstRowLstColumnCollection.size();
 
@@ -134,27 +152,30 @@ void FpDataProc::procDataForCollection()
             continue;
         }
 
+        //引用一行的lst，编辑数据
         QList<QVariant> &lstColumnCollection = m_lstRowLstColumnCollection[i];//maybe wrong
         const QString POID = lstColumnCollection[3].toString();
-        const QString ID_number = lstColumnCollection.last().toString();
+        const QString ID_number = lstColumnCollection[4].toString();
 
         QList<QList<QVariant> > lstStrLstContentDutyDetail;
 
         //timeflag charge_hours
+        //timeflag到打卡工时和付费工时的映射
         m_pFpDbProc->getDutyDetailByPOIDIDNumberFromMemDb(lstStrLstContentDutyDetail,POID,ID_number);
         QMap<QDate,QList<double> > mapDate2PunchIn;
         foreach(QList<QVariant> lstDutyDetail,lstStrLstContentDutyDetail)
         {
-            mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[1].toDouble();
-            mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[2].toDouble();
+            mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[1].toDouble();//punch_hours
+            mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[2].toDouble();//charge_hours
         }
 
+        //遍历这个月的日历表，添加汇总表列的明细
         foreach(QList<QVariant> workDay,lstStrLstContent)
         {
             if (mapDate2PunchIn.contains(workDay[0].toDate()))
             {
-                lstColumnCollection << QVariant(mapDate2PunchIn[workDay[0].toDate()][0]);
-                lstColumnCollection << QVariant(mapDate2PunchIn[workDay[0].toDate()][1]);
+                lstColumnCollection << QVariant(mapDate2PunchIn[workDay[0].toDate()][0]);//punch_hours
+                lstColumnCollection << QVariant(mapDate2PunchIn[workDay[0].toDate()][1]);//charge_hours
             }
             else
             {
@@ -162,7 +183,7 @@ void FpDataProc::procDataForCollection()
                 lstColumnCollection << 0;
             }
         }
-        //qDebug() << lstColumnCollection;
+        qDebug() << lstColumnCollection;
     }
 
 }
@@ -178,7 +199,19 @@ void FpDataProc::setDataIntoExcel()
     {
         return;
     }
-    m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnCollection);
+    m_pFpExcelProc->setDataIntoExcel(m_lstTitleCollection,m_lstRowLstColumnCollection,1);
+
+    if (0 == m_lstRowLstColumnBelateOrLeaveEarlyDetail.size())
+    {
+        return;
+    }
+    m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnBelateOrLeaveEarlyDetail,2);
+
+    if (0 == m_lstRowLstColumnMissPunchInDetail.size())
+    {
+        return;
+    }
+    m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnMissPunchInDetail,3);
 }
 
 
@@ -238,6 +271,26 @@ void FpDataProc::createWorkDays()
     m_pFpDbProc->setWorkDaysIntoLocalDb(lstLstContentWorkDays);
 }
 
+void FpDataProc::getBelateOrLeaveEarlyDetail()
+{
+    if (!m_pFpDbProc->prepareMemDb())
+    {
+        qDebug() << "Db Open Failed";
+        return;
+    }
+    m_pFpDbProc->getDutyDetailBelateOrLeaveEarlyFromMemDb(m_lstRowLstColumnBelateOrLeaveEarlyDetail);
+}
+
+void FpDataProc::getMissPunchInDetail()
+{
+    if (!m_pFpDbProc->prepareMemDb())
+    {
+        qDebug() << "Db Open Failed";
+        return;
+    }
+    m_pFpDbProc->getDutyDetailMissPunchInFromMemDb(m_lstRowLstColumnMissPunchInDetail);
+}
+
 void FpDataProc::getDistinctPersonal()
 {
     if (!m_pFpDbProc->prepareMemDb())
@@ -251,26 +304,26 @@ void FpDataProc::getDistinctPersonal()
     m_lstTitleCollection << tr("区域");
     m_lstTitleCollection << tr("产品线");
     m_lstTitleCollection << tr("POID");
-    m_lstTitleCollection << tr("工号");
+    m_lstTitleCollection << tr("身份证号码");
     m_lstTitleCollection << tr("姓名");
     m_lstTitleCollection << tr("实际打卡工时");
 
 }
 
-void FpDataProc::setDutyCollection()
-{
-    if (0 == m_lstRowLstColumnCollection.size())
-    {
-        return;
-    }
+//void FpDataProc::setDutyCollection()
+//{
+//    if (0 == m_lstRowLstColumnCollection.size())
+//    {
+//        return;
+//    }
 
-    if (!m_pFpDbProc->prepareMemDb())
-    {
-        qDebug() << "Db Open Failed";
-        return;
-    }
-    m_pFpDbProc->setDutyCollectionIntoMemDb(m_lstRowLstColumnCollection);
-}
+//    if (!m_pFpDbProc->prepareMemDb())
+//    {
+//        qDebug() << "Db Open Failed";
+//        return;
+//    }
+//    m_pFpDbProc->setDutyCollectionIntoMemDb(m_lstRowLstColumnCollection);
+//}
 
 void FpDataProc::setDutyDetail()
 {
@@ -289,23 +342,23 @@ void FpDataProc::setDutyDetail()
 
 const QString &FpDataProc::getDutyDetailSQL()
 {
-    return m_pFpDbProc->m_strDetailSQL;
+    return m_pFpDbProc->s_strDetailSQL;
 }
 
 const QString &FpDataProc::getDutyDetailBelateOrLeaveEarlySQL()
 {
-    return m_pFpDbProc->m_strDetailBelateOrLeaveEarlySQL;
+    return m_pFpDbProc->s_strDetailBelateOrLeaveEarlySQL;
 }
 
 const QString &FpDataProc::getDutyDetailMissPunchInSQL()
 {
-    return m_pFpDbProc->m_strDetailMissPunchInSQL;
+    return m_pFpDbProc->s_strDetailMissPunchInSQL;
 }
 
-const QString &FpDataProc::getDutyColletionSQL()
-{
-    return m_pFpDbProc->m_strCollectionSQL;
-}
+//const QString &FpDataProc::getDutyColletionSQL()
+//{
+//    return m_pFpDbProc->m_strCollectionSQL;
+//}
 
 
 bool FpDataProc::getAndCheckCurMonth()
@@ -325,7 +378,7 @@ bool FpDataProc::getAndCheckCurMonth()
             == lstStrLstContent[0][1].toDate().toString("yyyyMM"))
     {
         m_strDateMonth = lstStrLstContent[0][0].toDate().toString("yyyyMM");
-        qDebug() << m_strDateMonth;
+        //qDebug() << m_strDateMonth;
         return true;
     }
 

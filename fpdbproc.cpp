@@ -12,16 +12,16 @@ const QString detailSQLTmp =
                 " PDU_SPDT,job_id,name,on_duty,off_duty,collaboration_type,ID_number,POID"
                 " FROM duty_detail %1");
 
-const QString FpDbProc::m_strDetailSQL = detailSQLTmp.arg("");
+const QString FpDbProc::s_strDetailSQL = detailSQLTmp.arg("");
 
-const QString FpDbProc::m_strDetailBelateOrLeaveEarlySQL =
+const QString FpDbProc::s_strDetailBelateOrLeaveEarlySQL =
         detailSQLTmp.arg("WHERE punch_type = 1");
 
-const QString FpDbProc::m_strDetailMissPunchInSQL =
+const QString FpDbProc::s_strDetailMissPunchInSQL =
         detailSQLTmp.arg("WHERE punch_type = 2");
 
-const QString FpDbProc::m_strCollectionSQL =
-        "SELECT * FROM duty_collection";
+//const QString FpDbProc::m_strCollectionSQL =
+//        "SELECT * FROM duty_collection";
 
 
 FpDbProc::FpDbProc(QObject *parent) :
@@ -95,7 +95,7 @@ bool FpDbProc::prepareMemDb()
 
         strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (1,'工作日');";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
-        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (2,'双休日');";
+        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (2,'公休日');";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
         strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (3,'节假日')";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
@@ -117,18 +117,18 @@ bool FpDbProc::prepareMemDb()
     strSql = "DROP TABLE IF EXISTS duty_collection";
     retRes  = retRes && dbOper->dbQureyExec(strSql);
 
-    strSql = "CREATE TABLE duty_collection (               "
-            "    company             VCHAR,            "
-            "    area                VCHAR,            "
-            "    product_line        VCHAR,            "
-            /*"    year_month          date,             "*/
-            "    POID                VCHAR,            "
-            "    job_id              VCHAR,            "
-            "    name                VCHAR,            "
-            "    punch_hours         DOUBLE,           "
-            "    PRIMARY KEY(job_id,name)       "
-            ")";
-    retRes  = retRes && dbOper->dbQureyExec(strSql);
+//    strSql = "CREATE TABLE duty_collection (               "
+//            "    company             VCHAR,            "
+//            "    area                VCHAR,            "
+//            "    product_line        VCHAR,            "
+//            /*"    year_month          date,             "*/
+//            "    POID                VCHAR,            "
+//            "    job_id              VCHAR,            "
+//            "    name                VCHAR,            "
+//            "    punch_hours         DOUBLE,           "
+//            "    PRIMARY KEY(job_id,name)       "
+//            ")";
+//    retRes  = retRes && dbOper->dbQureyExec(strSql);
 
 
     if (retRes)
@@ -192,20 +192,20 @@ bool FpDbProc::getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrL
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "SELECT DISTINCT company,area,product_line,poid,name, round(SUM(punch_hours),2) as punchIn_h,ID_number"
+    strSql = "SELECT DISTINCT company,area,product_line,poid,ID_number,name, round(SUM(punch_hours),2) as punchIn_h"
             " FROM duty_detail WHERE punch_type IN (0,1) "
             " GROUP BY poid,ID_number ORDER BY poid,name";
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
 
-bool FpDbProc::setDutyCollectionIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
-{
-    QString strSql;
-    DbOper *dbOper = m_pDbOperMem;
+//bool FpDbProc::setDutyCollectionIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
+//{
+//    QString strSql;
+//    DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "INSERT INTO duty_collection VALUES(?,?,?,?,?,?,?)";
-    return dbOper->dbInsertData(strSql,lstStrLstContent);
-}
+//    strSql = "INSERT INTO duty_collection VALUES(?,?,?,?,?,?,?)";
+//    return dbOper->dbInsertData(strSql,lstStrLstContent);
+//}
 
 
 bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
@@ -288,5 +288,32 @@ bool FpDbProc::getDutyDetailByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lst
                      " FROM duty_detail"
                      " WHERE POID = '%1' AND ID_number = '%2' AND punch_type IN (0,1)"
                      " ORDER BY timeflag").arg(POID).arg(IDNumber);
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getDutyDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = s_strDetailSQL;
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getDutyDetailBelateOrLeaveEarlyFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = s_strDetailBelateOrLeaveEarlySQL;
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getDutyDetailMissPunchInFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = s_strDetailMissPunchInSQL;
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }

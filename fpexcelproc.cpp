@@ -106,7 +106,7 @@ bool FpExcelProc::getDataFromExcel(QList<QVariant> &lstTitle, QList<QList<QVaria
 //    qDebug() << lstLstContent.size();
 }
 
-bool FpExcelProc::setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent)
+bool FpExcelProc::setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent, const int sheetID)
 {
     if (0 == lstLstContent.size())
     {
@@ -156,10 +156,10 @@ bool FpExcelProc::setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVaria
         return false;
     }
     //取得第一个工作表
-    pExcel->selectSheet(SheetID);
+    pExcel->selectSheet(sheetID);
     //取得工作表已使用范围
     int topLeftRow, topLeftColumn, bottomRightRow, bottomRightColumn;
-    topLeftRow = 5;
+    topLeftRow = 2;
     topLeftColumn = 1;
     bottomRightRow = lstLstContent.size();
     bottomRightColumn = lstLstContent.first().size();

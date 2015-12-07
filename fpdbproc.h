@@ -16,7 +16,7 @@ public:
     bool prepareLocalDb();
 
     bool getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
-    bool setDutyCollectionIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+//    bool setDutyCollectionIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
     bool setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
 
 
@@ -30,12 +30,16 @@ public:
     bool getDutyDetailByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
                                           const QString &POID, const QString &IDNumber);
 
+    bool getDutyDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool getDutyDetailBelateOrLeaveEarlyFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool getDutyDetailMissPunchInFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
+
 
 public:
-    const static QString m_strDetailSQL;
-    const static QString m_strDetailBelateOrLeaveEarlySQL;
-    const static QString m_strDetailMissPunchInSQL;
-    const static QString m_strCollectionSQL;
+    const static QString s_strDetailSQL;
+    const static QString s_strDetailBelateOrLeaveEarlySQL;
+    const static QString s_strDetailMissPunchInSQL;
+//    const static QString m_strCollectionSQL;
 
 private:
     bool getWorkDaysFromDb(QList<QList<QVariant> > &lstStrLstContent,DbOper *argDbOper);
