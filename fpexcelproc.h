@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+class QExcel;
+
 class FpExcelProc : public QObject
 {
     Q_OBJECT
@@ -11,7 +13,18 @@ public:
     ~FpExcelProc();
 
     bool getDataFromExcel(QList<QVariant> &lstTitle,QList<QList<QVariant> > &lstLstContent);
-    bool setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent, const int sheetID=1);
+
+    QString getExcelColumnName(const int column);
+
+
+    bool prepareExcel(const int sheetNum=3);
+    bool saveExcel(const QString excelType="51");
+    bool setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent, const int sheetID);
+
+private:
+    QExcel *m_pExcel;
+    QString m_fileSaveAsName;
+
 
 };
 

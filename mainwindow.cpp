@@ -249,9 +249,9 @@ void MainWindow::showCollection(QTableView *tableWidget)
 void MainWindow::onImportFile()
 {
     m_pFpDataProc->initial();
-//    m_pFpDataProc->getDataFromExcel();
-//    m_pFpDataProc->procDataForDatail();
-//    m_pFpDataProc->setDutyDetail();
+    m_pFpDataProc->getDataFromExcel();
+    m_pFpDataProc->procDataForDatail();
+    m_pFpDataProc->setDutyDetail();
 
     m_pFpDataProc->getBelateOrLeaveEarlyDetail();
     m_pFpDataProc->getMissPunchInDetail();
@@ -267,7 +267,6 @@ void MainWindow::onImportFile()
 
 void MainWindow::onExportFile()
 {
-//    m_pFpDataProc->getDistinctPersonal();
     m_pFpDataProc->setDataIntoExcel();
 }
 

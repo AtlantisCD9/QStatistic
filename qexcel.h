@@ -38,13 +38,13 @@ public:
     /* 单元格                                                                 */
     /**************************************************************************/
     void setCellVariant(int row, int column, const QVariant& value);
-    void setCellString(int row, int column, const QString& value);
     //cell 例如 "A7"
-    void setCellString(const QString& cell, const QString& value);
+    void setCellVariant(const QString& cell, const QVariant &value);
     //range 例如 "A5:C7"
     void mergeCells(const QString& range);
     void mergeCells(int topLeftRow, int topLeftColumn, int bottomRightRow, int bottomRightColumn);
     QVariant getCellValue(int row, int column);
+    QVariant getCellValue(const QString &cell);
     void clearCell(int row, int column);
     void clearCell(const QString& cell);
 

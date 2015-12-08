@@ -113,10 +113,10 @@ void QExcel::selectSheet(int sheetIndex)
     m_sheet = m_sheets->querySubObject("Item(int)", sheetIndex);
 }
 
-void QExcel::setCellString(int row, int column, const QString& value)
+void QExcel::setCellVariant(const QString& cell, const QVariant& value)
 {
-    QAxObject *range = m_sheet->querySubObject("Cells(int,int)", row, column);
-    range->dynamicCall("SetValue(const QString&)", value);
+    QAxObject *range = m_sheet->querySubObject("Range(const QString&)", cell);
+    range->dynamicCall("SetValue(const QVariant&)", value);
 }
 
 void QExcel::setCellVariant(int row, int column, const QVariant& value)
@@ -174,6 +174,13 @@ QVariant QExcel::getCellValue(int row, int column)
 {
     QAxObject *range = m_sheet->querySubObject("Cells(int,int)", row, column);
     return range->property("Value");
+}
+
+QVariant QExcel::getCellValue(const QString& cell)
+{
+    QAxObject *range = m_sheet->querySubObject("Range(const QString&)", cell);
+    return range->property("Value");
+
 }
 
 void QExcel::save()
@@ -319,12 +326,6 @@ int QExcel::getUsedRowsCount()
     QAxObject *rows = usedRange->querySubObject("Rows");
     int bottomRow = topRow + rows->property("Count").toInt() - 1;
     return bottomRow;
-}
-
-void QExcel::setCellString(const QString& cell, const QString& value)
-{
-    QAxObject *range = m_sheet->querySubObject("Range(const QString&)", cell);
-    range->dynamicCall("SetValue(const QString&)", value);
 }
 
 void QExcel::setCellFontSize(const QString &cell, int size)

@@ -183,7 +183,7 @@ void FpDataProc::procDataForCollection()
                 lstColumnCollection << 0;
             }
         }
-        qDebug() << lstColumnCollection;
+        //qDebug() << lstColumnCollection;
     }
 
 }
@@ -195,23 +195,30 @@ void FpDataProc::getDataFromExcel()
 
 void FpDataProc::setDataIntoExcel()
 {
-    if (0 == m_lstRowLstColumnCollection.size())
-    {
-        return;
-    }
-    m_pFpExcelProc->setDataIntoExcel(m_lstTitleCollection,m_lstRowLstColumnCollection,1);
 
-    if (0 == m_lstRowLstColumnBelateOrLeaveEarlyDetail.size())
+    if (!m_pFpExcelProc->prepareExcel(3))
     {
         return;
     }
-    m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnBelateOrLeaveEarlyDetail,2);
 
-    if (0 == m_lstRowLstColumnMissPunchInDetail.size())
+    if (0 != m_lstRowLstColumnCollection.size())
     {
-        return;
+        m_pFpExcelProc->setDataIntoExcel(m_lstTitleCollection,m_lstRowLstColumnCollection,1);
     }
-    m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnMissPunchInDetail,3);
+
+
+    if (0 != m_lstRowLstColumnBelateOrLeaveEarlyDetail.size())
+    {
+        m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnBelateOrLeaveEarlyDetail,2);
+    }
+
+    if (0 != m_lstRowLstColumnMissPunchInDetail.size())
+    {
+        m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnMissPunchInDetail,3);
+    }
+
+    m_pFpExcelProc->saveExcel("51");
+
 }
 
 
