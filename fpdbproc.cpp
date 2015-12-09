@@ -76,10 +76,11 @@ bool FpDbProc::prepareMemDb()
             "    POID                VCHAR,            "
             "    timeflag            DATETIME,         "
             "    day_of_week         INT,              "
+            "    punch_type          INT,              "
+            "    abnormal_hours      DOUBLE,           "
             "    punch_hours         DOUBLE,           "
             "    payroll_multi       INT,              "
             "    charge_hours        DOUBLE,           "
-            "    punch_type          INT,              "
             "    PRIMARY KEY(ID_number,timeflag)       "
             ")";
     retRes  = retRes && dbOper->dbQureyExec(strSql);
@@ -166,7 +167,7 @@ bool FpDbProc::prepareLocalDb()
 
         strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (1,'工作日');";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
-        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (2,'双休日');";
+        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (2,'公休日');";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
         strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (3,'节假日')";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
@@ -192,7 +193,7 @@ bool FpDbProc::getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrL
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "SELECT DISTINCT company,area,product_line,poid,ID_number,name, round(SUM(punch_hours),2) as punchIn_h"
+    strSql = "SELECT DISTINCT company,area,product_line,poid,ID_number,name, round(SUM(abnormal_hours),2) as abnormal_h,round(SUM(punch_hours),2) as punchIn_h"
             " FROM duty_detail WHERE punch_type IN (0,1) "
             " GROUP BY poid,ID_number ORDER BY poid,name";
     return dbOper->dbQureyData(strSql,lstStrLstContent);
@@ -213,7 +214,7 @@ bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "INSERT INTO duty_detail VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    strSql = "INSERT INTO duty_detail VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     return dbOper->dbInsertData(strSql,lstStrLstContent);
 }
 
@@ -284,7 +285,7 @@ bool FpDbProc::getDutyDetailByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lst
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = QString("SELECT timeflag,round(punch_hours,2),round(punch_hours*payroll_multi,2) AS charge_h"
+    strSql = QString("SELECT timeflag,round(punch_hours,2),round(punch_hours*payroll_multi,2) AS charge_h,payroll_multi"
                      " FROM duty_detail"
                      " WHERE POID = '%1' AND ID_number = '%2' AND punch_type IN (0,1)"
                      " ORDER BY timeflag").arg(POID).arg(IDNumber);

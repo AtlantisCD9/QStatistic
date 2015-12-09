@@ -2,6 +2,7 @@
 #define FPDATAPROC_H
 
 #include <QObject>
+#include <QDateTime>
 
 class FpDbProc;
 class FpExcelProc;
@@ -49,6 +50,10 @@ private:
     void createWorkDays();
 
     bool getAndCheckCurMonth();//example:201510
+
+    int getAbnormalHours(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd);
+    int getPunchInHours(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd);
+    int getOverTimeHours(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd);
     
 private:
     FpDbProc *m_pFpDbProc;

@@ -71,23 +71,6 @@ void FpDataProc::procDataForDatail()
         //day_of_week
         m_lstRowLstColumnDetail[i] << QVariant(dtTimeFlag.date().dayOfWeek());
 
-        //punch_hours
-        if (!dtEnd.isNull())
-        {
-            m_lstRowLstColumnDetail[i] << QVariant(dtStart.secsTo(dtEnd)*1.0/3600);
-        }
-        else
-        {
-            m_lstRowLstColumnDetail[i] << QVariant(0.0);
-        }
-
-        //payroll_multi
-        m_lstRowLstColumnDetail[i] << QVariant(mapDate2Type[dtTimeFlag.date()]);
-
-        //charge_hours
-        m_lstRowLstColumnDetail[i] << QVariant(0.0);
-
-
         //punch_type:0,normal;1,beLate or leaveEarly;2,abnormal;
         if (dtEnd.isNull())
         {
@@ -106,6 +89,72 @@ void FpDataProc::procDataForDatail()
             }
         }
 
+        //abnormal_hours
+        if (m_lstRowLstColumnDetail[i].last() == QVariant(2))
+        {
+            if (1 == mapDate2Type[dtTimeFlag.date()])
+            {
+                m_lstRowLstColumnDetail[i] << QVariant(8);
+            }
+            else
+            {
+                m_lstRowLstColumnDetail[i] << QVariant(0);
+            }
+
+        }
+        else if (m_lstRowLstColumnDetail[i].last() == QVariant(1))
+        {
+            if (1 == mapDate2Type[dtTimeFlag.date()])
+            {
+                int secsTemp = 8*3600-getAbnormalHours(dtTimeFlag,dtStart,dtEnd);
+                if (secsTemp < 0)
+                {
+                    secsTemp = 0;
+                }
+
+                m_lstRowLstColumnDetail[i] << QVariant(secsTemp*1.0/3600);
+            }
+            else
+            {
+                m_lstRowLstColumnDetail[i] << QVariant(0);
+            }
+        }
+        else
+        {
+            m_lstRowLstColumnDetail[i] << QVariant(0);
+        }
+
+        //punch_hours
+        if (!dtEnd.isNull())
+        {
+            if (1 == mapDate2Type[dtTimeFlag.date()])
+            {
+                m_lstRowLstColumnDetail[i] << QVariant(getPunchInHours(dtTimeFlag,dtStart,dtEnd)*1.0/3600);
+            }
+            else
+            {
+                int overTimeHours = 8*3600;
+                if (getOverTimeHours(dtTimeFlag,dtStart,dtEnd) < overTimeHours)
+                {
+                    overTimeHours = getOverTimeHours(dtTimeFlag,dtStart,dtEnd);
+                }
+                m_lstRowLstColumnDetail[i] << QVariant(overTimeHours*1.0/3600);
+            }
+        }
+        else
+        {
+            m_lstRowLstColumnDetail[i] << QVariant(0.0);
+        }
+
+        //payroll_multi
+        m_lstRowLstColumnDetail[i] << QVariant(mapDate2Type[dtTimeFlag.date()]);
+
+        //charge_hours
+        m_lstRowLstColumnDetail[i] << QVariant(0.0);
+
+
+
+
 
 
         //qDebug() << m_lstRowLstColumnDetail[i];
@@ -119,9 +168,29 @@ void FpDataProc::procDataForCollection()
     {
         return;
     }
+
     //如果是某个月，那么获取该月份的日历表
     QList<QList<QVariant> > lstStrLstContent;
     m_pFpDbProc->getWorkDaysByCurMonthFromMemDb(lstStrLstContent,m_strDateMonth);
+
+    QMap<QDate,int> mapDate2Type;
+    foreach(QList<QVariant> workDay,lstStrLstContent)
+    {
+        mapDate2Type[workDay[0].toDate()] = workDay[1].toInt();
+    }
+
+    int workDaysNum = 0;
+    foreach(QList<QVariant> workDay,lstStrLstContent)
+    {
+        if (1 == workDay[1].toInt())
+        {
+            ++workDaysNum;
+        }
+    }
+
+    m_lstTitleCollection << QVariant(QString("应服务工时"));
+    m_lstTitleCollection << QVariant(QString("欠工时"));
+
 
     //初始化dayOfWeek到文字描述映射
     QMap<int,QString> mapInt2Descrp;
@@ -136,10 +205,23 @@ void FpDataProc::procDataForCollection()
     foreach(QList<QVariant> workDay,lstStrLstContent)
     {
         //foreach add title
+        QString dscrip;
+        if (1 == workDay[1].toInt())
+        {
+            dscrip = "工作日";
+        }
+        else if (2 == workDay[1].toInt())
+        {
+            dscrip = "公休日";
+        }
+        else
+        {
+            dscrip = "节假日";
+        }
 
+        m_lstTitleCollection << QVariant(QString("%1日%2\n%3\n打卡工时").arg(workDay[0].toDate().toString("dd")).arg(mapInt2Descrp[workDay[0].toDate().dayOfWeek()]).arg(dscrip));
+        m_lstTitleCollection << QVariant(QString("%1日%2\n%3\n付费工时").arg(workDay[0].toDate().toString("dd")).arg(mapInt2Descrp[workDay[0].toDate().dayOfWeek()]).arg(dscrip));
 
-        m_lstTitleCollection << QVariant(QString("%1日%2\n打卡工时").arg(workDay[0].toDate().toString("dd")).arg(mapInt2Descrp[workDay[0].toDate().dayOfWeek()]));
-        m_lstTitleCollection << QVariant(QString("%1日%2\n付费工时").arg(workDay[0].toDate().toString("dd")).arg(mapInt2Descrp[workDay[0].toDate().dayOfWeek()]));
     }
     //qDebug() << m_lstTitleCollection;
 
@@ -153,7 +235,24 @@ void FpDataProc::procDataForCollection()
         }
 
         //引用一行的lst，编辑数据
-        QList<QVariant> &lstColumnCollection = m_lstRowLstColumnCollection[i];//maybe wrong
+        QList<QVariant> &lstColumnCollection = m_lstRowLstColumnCollection[i];
+
+        int sumPunchInHours = lstColumnCollection.last().toDouble();
+        int needPunchInHours = workDaysNum*8;
+
+        lstColumnCollection << QVariant(workDaysNum*8);
+
+        if (needPunchInHours - sumPunchInHours > 0)
+        {
+            lstColumnCollection << QVariant(needPunchInHours - sumPunchInHours);
+        }
+        else
+        {
+            lstColumnCollection << QVariant(0);
+        }
+
+
+
         const QString POID = lstColumnCollection[3].toString();
         const QString ID_number = lstColumnCollection[4].toString();
 
@@ -166,7 +265,21 @@ void FpDataProc::procDataForCollection()
         foreach(QList<QVariant> lstDutyDetail,lstStrLstContentDutyDetail)
         {
             mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[1].toDouble();//punch_hours
-            mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[2].toDouble();//charge_hours
+            if (int(lstDutyDetail[1].toDouble()) >= 8)
+            {
+                mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8*lstDutyDetail[3].toInt();//charge_hours
+            }
+            else
+            {
+                if (needPunchInHours - sumPunchInHours > 0 || 1 != mapDate2Type[lstDutyDetail[0].toDate()])
+                {
+                    mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[2].toDouble();//charge_hours
+                }
+                else
+                {
+                    mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8*lstDutyDetail[3].toInt();//charge_hours
+                }
+            }
         }
 
         //遍历这个月的日历表，添加汇总表列的明细
@@ -313,6 +426,7 @@ void FpDataProc::getDistinctPersonal()
     m_lstTitleCollection << tr("POID");
     m_lstTitleCollection << tr("身份证号码");
     m_lstTitleCollection << tr("姓名");
+    m_lstTitleCollection << tr("异常工时");
     m_lstTitleCollection << tr("实际打卡工时");
 
 }
@@ -392,3 +506,162 @@ bool FpDataProc::getAndCheckCurMonth()
     return false;
 }
 
+
+int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateTime dtEnd)
+{
+    int tmpStart = 0;
+    if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(8,0))) > 0)
+    {
+        dtStart = QDateTime(dtTimeFlag.date(),QTime(8,0));
+    }
+    else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0))) > 0)
+    {
+        tmpStart = dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0)));
+        dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
+    }
+    else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(13,30))) > 0)
+    {
+        dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
+    }
+
+    int tmpEnd = 0;
+    if (QDateTime(dtTimeFlag.date(),QTime(19,0)).secsTo(dtEnd) > 0)
+    {
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(19,0));
+    }
+    else if (QDateTime(dtTimeFlag.date(),QTime(18,0)).secsTo(dtEnd) > 0)
+    {
+        tmpEnd = QDateTime(dtTimeFlag.date(),QTime(18,0)).secsTo(dtEnd);
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(17,30));
+    }
+    else if (QDateTime(dtTimeFlag.date(),QTime(17,30)).secsTo(dtEnd) > 0)
+    {
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(17,30));
+    }
+    else if (QDateTime(dtTimeFlag.date(),QTime(13,30)).secsTo(dtEnd) > 0)
+    {
+        tmpEnd = QDateTime(dtTimeFlag.date(),QTime(13,30)).secsTo(dtEnd);
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,0));
+    }
+    else if (QDateTime(dtTimeFlag.date(),QTime(12,0)).secsTo(dtEnd) > 0)
+    {
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,00));
+    }
+
+    int tempStartEnd = dtStart.secsTo(dtEnd);
+    if (tempStartEnd < 0)
+    {
+        tempStartEnd = 0;
+    }
+
+    return (tempStartEnd + tmpStart + tmpEnd);
+
+
+//    qDebug() << dtStart;
+//    qDebug() << dtEnd;
+//    qDebug() << "------------";
+//    qDebug() << (tempStartEnd)*1.0/3600;
+//    qDebug() << (tmpStart)*1.0/3600;
+//    qDebug() << (tmpEnd)*1.0/3600;
+//    qDebug() << "------------";
+//    qDebug() << (tempStartEnd + tmpStart +tmpEnd)*1.0/3600;
+}
+
+int FpDataProc::getPunchInHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateTime dtEnd)
+{
+    int tmpStart = 0;
+/*    if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(8,0))) > 0)
+    {
+        dtStart = QDateTime(dtTimeFlag.date(),QTime(8,0));
+    }
+    else */if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0))) > 0)
+    {
+        tmpStart = dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0)));
+        dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
+    }
+    else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(13,30))) > 0)
+    {
+        dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
+    }
+
+    int tmpEnd = 0;
+    if (QDateTime(dtTimeFlag.date(),QTime(18,0)).secsTo(dtEnd) > 0)
+    {
+        tmpEnd = QDateTime(dtTimeFlag.date(),QTime(18,0)).secsTo(dtEnd);
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(17,30));
+    }
+    else if (QDateTime(dtTimeFlag.date(),QTime(17,30)).secsTo(dtEnd) > 0)
+    {
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(17,30));
+    }
+    else if (QDateTime(dtTimeFlag.date(),QTime(13,30)).secsTo(dtEnd) > 0)
+    {
+        tmpEnd = QDateTime(dtTimeFlag.date(),QTime(13,30)).secsTo(dtEnd);
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,0));
+    }
+    else if (QDateTime(dtTimeFlag.date(),QTime(12,0)).secsTo(dtEnd) > 0)
+    {
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,00));
+    }
+
+    int tempStartEnd = dtStart.secsTo(dtEnd);
+    if (tempStartEnd < 0)
+    {
+        tempStartEnd = 0;
+    }
+
+    return (tempStartEnd + tmpStart + tmpEnd);
+
+
+//    qDebug() << dtStart;
+//    qDebug() << dtEnd;
+//    qDebug() << "------------";
+//    qDebug() << (tempStartEnd)*1.0/3600;
+//    qDebug() << (tmpStart)*1.0/3600;
+//    qDebug() << (tmpEnd)*1.0/3600;
+//    qDebug() << "------------";
+//    qDebug() << (tempStartEnd + tmpStart +tmpEnd)*1.0/3600;
+}
+
+int FpDataProc::getOverTimeHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateTime dtEnd)
+{
+    int tmpStart = 0;
+//    if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0))) > 0)
+//    {
+//        tmpStart = dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0)));
+//        dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
+//    }
+//    else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(13,30))) > 0)
+//    {
+//        dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
+//    }
+
+    int tmpEnd = 0;
+//    if (QDateTime(dtTimeFlag.date(),QTime(13,30)).secsTo(dtEnd) > 0)
+//    {
+//        tmpEnd = QDateTime(dtTimeFlag.date(),QTime(13,30)).secsTo(dtEnd);
+//        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,0));
+//    }
+//    else if (QDateTime(dtTimeFlag.date(),QTime(12,0)).secsTo(dtEnd) > 0)
+//    {
+//        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,00));
+//    }
+
+    int tempStartEnd = dtStart.secsTo(dtEnd);
+    if (tempStartEnd < 0)
+    {
+        tempStartEnd = 0;
+    }
+
+    return (tempStartEnd + tmpStart + tmpEnd);
+
+
+//    qDebug() << dtStart;
+//    qDebug() << dtEnd;
+//    qDebug() << "------------";
+//    qDebug() << (tempStartEnd)*1.0/3600;
+//    qDebug() << (tmpStart)*1.0/3600;
+//    qDebug() << (tmpEnd)*1.0/3600;
+//    qDebug() << "------------";
+//    qDebug() << (tempStartEnd + tmpStart +tmpEnd)*1.0/3600;
+}
