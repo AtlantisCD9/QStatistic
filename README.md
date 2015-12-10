@@ -1,2 +1,0 @@
-# QExcelApp
-QExcelApp
