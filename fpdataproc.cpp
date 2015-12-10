@@ -179,7 +179,13 @@ void FpDataProc::procDataForCollection()
         mapDate2Type[workDay[0].toDate()] = workDay[1].toInt();
     }
 
-    int workDaysNum = 0;
+    m_lstTitleCollection << tr("异常工时");//6
+    m_lstTitleCollection << tr("实际打卡工时");//7
+    m_lstTitleCollection << tr("应服务工时");//8
+    m_lstTitleCollection << tr("欠工时");//9
+    m_lstTitleCollection << tr("加班工时");//10
+
+    int workDaysNum = 0;//本月工作日
     foreach(QList<QVariant> workDay,lstStrLstContent)
     {
         if (1 == workDay[1].toInt())
@@ -188,8 +194,14 @@ void FpDataProc::procDataForCollection()
         }
     }
 
-    m_lstTitleCollection << QVariant(QString("应服务工时"));
-    m_lstTitleCollection << QVariant(QString("欠工时"));
+    //处理异常工时——取整数
+    const int abnormalHourID = 6;
+    //处理打卡工时，去除节假日
+    const int sumPunchInHourID = 7;
+    const int needPunchInHourID = 8;
+    const int oweHourID = 9;
+    const int overHourID = 10;
+
 
 
     //初始化dayOfWeek到文字描述映射
@@ -236,12 +248,59 @@ void FpDataProc::procDataForCollection()
 
         //引用一行的lst，编辑数据
         QList<QVariant> &lstColumnCollection = m_lstRowLstColumnCollection[i];
+        const QString POID = lstColumnCollection[3].toString();
+        const QString ID_number = lstColumnCollection[4].toString();
 
-        int sumPunchInHours = lstColumnCollection.last().toDouble();
+        //处理异常工时——取整数
+        QList<QList<QVariant> > lstStrLstContentDutyAbnormal;
+        //round(sum(abnormal_hours),2)
+        m_pFpDbProc->getDutyAbnormalHoursSumByPOIDIDNumberFromMemDb(lstStrLstContentDutyAbnormal,POID,ID_number);
+        if (lstStrLstContentDutyAbnormal.size() > 0)
+        {
+            int itemp = int(lstStrLstContentDutyAbnormal.first()[0].toDouble()*100);
+            int ihead = itemp/100;
+            int itail = itemp%100;
+            double dAbnormalHour = 0.0;
+            if (0 == itemp)
+            {
+                dAbnormalHour = 0;
+            }
+            else if (itail > 50)
+            {
+                dAbnormalHour = ihead+1;
+            }
+            else
+            {
+                dAbnormalHour = ihead+0.5;
+            }
+
+            lstColumnCollection << QVariant(dAbnormalHour);
+        }
+        else
+        {
+            lstColumnCollection << QVariant(0);
+        }
+
+        //处理工作日打卡
+        QList<QList<QVariant> > lstStrLstContentDutyPunchIn;
+        //round(sum(punch_hours),2)
+        m_pFpDbProc->getDutyPunchInHoursSumByPOIDIDNumberFromMemDb(lstStrLstContentDutyPunchIn,POID,ID_number);
+        if (lstStrLstContentDutyPunchIn.size() > 0)
+        {
+            lstColumnCollection << lstStrLstContentDutyPunchIn.first()[0];
+        }
+        else
+        {
+            lstColumnCollection << QVariant(0);
+        }
+
+
+        //应服务工时
         int needPunchInHours = workDaysNum*8;
+        lstColumnCollection << QVariant(needPunchInHours);
 
-        lstColumnCollection << QVariant(workDaysNum*8);
-
+        //欠工时
+        int sumPunchInHours = lstColumnCollection[sumPunchInHourID].toDouble();
         if (needPunchInHours - sumPunchInHours > 0)
         {
             lstColumnCollection << QVariant(needPunchInHours - sumPunchInHours);
@@ -251,16 +310,27 @@ void FpDataProc::procDataForCollection()
             lstColumnCollection << QVariant(0);
         }
 
+        //加班工时
+        QList<QList<QVariant> > lstStrLstContentDutyOverHours;
+        //round(sum(punch_hours),2)
+        m_pFpDbProc->getDutyOverHoursSumByPOIDIDNumberFromMemDb(lstStrLstContentDutyOverHours,POID,ID_number);
+        if (lstStrLstContentDutyOverHours.size() > 0)
+        {
+            lstColumnCollection << lstStrLstContentDutyOverHours.first()[0].toDouble();
+        }
+        else
+        {
+            lstColumnCollection << QVariant(0);
+        }
 
-
-        const QString POID = lstColumnCollection[3].toString();
-        const QString ID_number = lstColumnCollection[4].toString();
 
         QList<QList<QVariant> > lstStrLstContentDutyDetail;
 
-        //timeflag charge_hours
-        //timeflag到打卡工时和付费工时的映射
+        //timeflag,round(punch_hours,2),round(punch_hours*payroll_multi,2) AS charge_h,payroll_multi
         m_pFpDbProc->getDutyDetailByPOIDIDNumberFromMemDb(lstStrLstContentDutyDetail,POID,ID_number);
+
+
+        //timeflag到打卡工时和付费工时的映射
         QMap<QDate,QList<double> > mapDate2PunchIn;
         foreach(QList<QVariant> lstDutyDetail,lstStrLstContentDutyDetail)
         {
@@ -294,6 +364,13 @@ void FpDataProc::procDataForCollection()
             {
                 lstColumnCollection << 0;
                 lstColumnCollection << 0;
+                //如果是工作日，但是没有记录，那么需要加入异常工时
+                if (1 == workDay[1].toInt())
+                {
+                    double abnormalHour = lstColumnCollection[abnormalHourID].toDouble();
+                    abnormalHour += 8.0;
+                    lstColumnCollection[abnormalHourID] = QVariant(abnormalHour);
+                }
             }
         }
         //qDebug() << lstColumnCollection;
@@ -426,9 +503,6 @@ void FpDataProc::getDistinctPersonal()
     m_lstTitleCollection << tr("POID");
     m_lstTitleCollection << tr("身份证号码");
     m_lstTitleCollection << tr("姓名");
-    m_lstTitleCollection << tr("异常工时");
-    m_lstTitleCollection << tr("实际打卡工时");
-
 }
 
 //void FpDataProc::setDutyCollection()
@@ -459,6 +533,7 @@ void FpDataProc::setDutyDetail()
         return;
     }
     m_pFpDbProc->setDutyDetailIntoMemDb(m_lstRowLstColumnDetail);
+    m_pFpDbProc->updateDutyOverHours();
 }
 
 const QString &FpDataProc::getDutyDetailSQL()

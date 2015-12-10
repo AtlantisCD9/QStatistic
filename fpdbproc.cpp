@@ -193,7 +193,7 @@ bool FpDbProc::getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrL
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "SELECT DISTINCT company,area,product_line,poid,ID_number,name, round(SUM(abnormal_hours),2) as abnormal_h,round(SUM(punch_hours),2) as punchIn_h"
+    strSql = "SELECT DISTINCT company,area,product_line,poid,ID_number,name"
             " FROM duty_detail WHERE punch_type IN (0,1) "
             " GROUP BY poid,ID_number ORDER BY poid,name";
     return dbOper->dbQureyData(strSql,lstStrLstContent);
@@ -216,6 +216,15 @@ bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
 
     strSql = "INSERT INTO duty_detail VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     return dbOper->dbInsertData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::updateDutyOverHours()
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "UPDATE duty_detail SET punch_hours = 8.0,charge_hours = 8.0*payroll_multi WHERE punch_hours >8.0 AND payroll_multi IN (2,3)";
+    return dbOper->dbQureyExec(strSql);
 }
 
 bool FpDbProc::setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
@@ -289,6 +298,42 @@ bool FpDbProc::getDutyDetailByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lst
                      " FROM duty_detail"
                      " WHERE POID = '%1' AND ID_number = '%2' AND punch_type IN (0,1)"
                      " ORDER BY timeflag").arg(POID).arg(IDNumber);
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getDutyAbnormalHoursSumByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                                    const QString &POID,const QString &IDNumber)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = QString("SELECT round(sum(abnormal_hours),2)"
+                     " FROM duty_detail"
+                     " WHERE POID = '%1' AND ID_number = '%2' AND payroll_multi = 1").arg(POID).arg(IDNumber);
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getDutyPunchInHoursSumByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                                    const QString &POID,const QString &IDNumber)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = QString("SELECT round(sum(punch_hours),2)"
+                     " FROM duty_detail"
+                     " WHERE POID = '%1' AND ID_number = '%2' AND payroll_multi = 1").arg(POID).arg(IDNumber);
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getDutyOverHoursSumByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                                    const QString &POID,const QString &IDNumber)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = QString("SELECT round(sum(punch_hours),2)"
+                     " FROM duty_detail"
+                     " WHERE POID = '%1' AND ID_number = '%2' AND payroll_multi IN (2,3)").arg(POID).arg(IDNumber);
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
 

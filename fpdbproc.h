@@ -18,6 +18,7 @@ public:
     bool getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
 //    bool setDutyCollectionIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
     bool setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool updateDutyOverHours();
 
 
     bool setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
@@ -28,6 +29,12 @@ public:
     bool getWorkDaysByCurMonthFromMemDb(QList<QList<QVariant> > &lstStrLstContent,const QString &strCurMonth);
     bool getMinMaxMonthFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
     bool getDutyDetailByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                          const QString &POID, const QString &IDNumber);
+    bool getDutyAbnormalHoursSumByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                          const QString &POID, const QString &IDNumber);
+    bool getDutyPunchInHoursSumByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                          const QString &POID, const QString &IDNumber);
+    bool getDutyOverHoursSumByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
                                           const QString &POID, const QString &IDNumber);
 
     bool getDutyDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
