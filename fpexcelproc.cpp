@@ -192,6 +192,8 @@ bool FpExcelProc::saveExcel(const QString excelType)
     delete m_pExcel;
     m_pExcel = NULL;
 
+    QMessageBox::information(0,"Info",QString("Export Done!"));
+
     return true;
 }
 

@@ -15,10 +15,10 @@ const QString detailSQLTmp =
 const QString FpDbProc::s_strDetailSQL = detailSQLTmp.arg("");
 
 const QString FpDbProc::s_strDetailBelateOrLeaveEarlySQL =
-        detailSQLTmp.arg("WHERE punch_type = 1");
+        detailSQLTmp.arg("WHERE punch_type = 1 AND payroll_multi = 1");
 
 const QString FpDbProc::s_strDetailMissPunchInSQL =
-        detailSQLTmp.arg("WHERE punch_type = 2");
+        detailSQLTmp.arg("WHERE punch_type = 2 AND payroll_multi = 1");
 
 //const QString FpDbProc::m_strCollectionSQL =
 //        "SELECT * FROM duty_collection";
