@@ -92,14 +92,15 @@ void FpDataProc::procDataForDatail()
         //abnormal_hours
         if (m_lstRowLstColumnDetail[i].last() == QVariant(2))
         {
-            if (1 == mapDate2Type[dtTimeFlag.date()])
-            {
-                m_lstRowLstColumnDetail[i] << QVariant(8);
-            }
-            else
-            {
-                m_lstRowLstColumnDetail[i] << QVariant(0);
-            }
+//            if (1 == mapDate2Type[dtTimeFlag.date()])
+//            {
+//                m_lstRowLstColumnDetail[i] << QVariant(8);
+//            }
+//            else
+//            {
+//                m_lstRowLstColumnDetail[i] << QVariant(0);
+//            }
+            m_lstRowLstColumnDetail[i] << QVariant(0);//打卡异常的异常工时此处统一设置成0，在汇总处理时统一刷新
 
         }
         else if (m_lstRowLstColumnDetail[i].last() == QVariant(1))

@@ -67,6 +67,11 @@ bool FpExcelProc::getDataFromExcel(QList<QVariant> &lstTitle, QList<QList<QVaria
     int topLeftRow, topLeftColumn, bottomRightRow, bottomRightColumn;
     m_pExcel->getUsedRange(&topLeftRow, &topLeftColumn, &bottomRightRow, &bottomRightColumn);
 
+    if (256 == bottomRightColumn)
+    {
+        bottomRightColumn = 12;//Ãÿ ‚¥¶¿Ì
+    }
+
     QString rangeCell;
     rangeCell += getExcelColumnName(topLeftColumn);
     rangeCell += QString("%1");
