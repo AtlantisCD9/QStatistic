@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     m_actionWorkDaysSetting->setDisabled(true);
+    m_actionExportXls->setDisabled(true);
 
 
     //set connection
@@ -263,6 +264,9 @@ void MainWindow::onImportFile()
     showDetailBelateOrLeaveEarly(ui->tableView_beLateOrLeaveEarly);
     showDetailMissPunchIn(ui->tableView_missPunchIn);
     showCollection(ui->tableView_monthCollect);
+
+    m_actionExportXls->setEnabled(true);
+    m_actionImportXls->setDisabled(true);
 }
 
 void MainWindow::onExportFile()

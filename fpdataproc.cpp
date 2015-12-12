@@ -18,7 +18,7 @@ FpDataProc::FpDataProc(QObject *parent) :
     m_pFpDbProc = new FpDbProc;
     m_pFpExcelProc = new FpExcelProc;
 
-    //setWorkDays();
+    //createWorkDays();
     getWorkDays();
     syncWorkDays();
 }
@@ -514,7 +514,7 @@ void FpDataProc::createWorkDays()
     mapWeek2Type[6] = 2;
     mapWeek2Type[7] = 2;
 
-    int yearNum = 2015;
+    int yearNum = 2016;
     QDate endDate(yearNum+1,1,1);
     QDate myDate(yearNum,1,1);
     while(myDate < endDate)
