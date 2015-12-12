@@ -217,7 +217,7 @@ void FpDataProc::procDataForCollection()
     const int sumPunchInHourID = 7;
     const int needPunchInHourID = 8;
     const int oweHourID = 9;
-    const int overHourID = 10;
+    //const int overHourID = 10;
 
 
 
@@ -237,18 +237,18 @@ void FpDataProc::procDataForCollection()
         QString dscrip;
         if (1 == workDay[1].toInt())
         {
-            dscrip = "工作日";
+            dscrip = "工作日x1";
         }
         else if (2 == workDay[1].toInt())
         {
-            dscrip = "公休日";
+            dscrip = "公休日x2";
         }
         else
         {
-            dscrip = "节假日";
+            dscrip = "节假日x3";
         }
 
-        m_lstTitleCollection << QVariant(QString("%1日%2\n%3\n打卡工时").arg(workDay[0].toDate().toString("dd")).arg(mapInt2Descrp[workDay[0].toDate().dayOfWeek()]).arg(dscrip));
+        //m_lstTitleCollection << QVariant(QString("%1日%2\n%3\n打卡工时").arg(workDay[0].toDate().toString("dd")).arg(mapInt2Descrp[workDay[0].toDate().dayOfWeek()]).arg(dscrip));
         m_lstTitleCollection << QVariant(QString("%1日%2\n%3\n付费工时").arg(workDay[0].toDate().toString("dd")).arg(mapInt2Descrp[workDay[0].toDate().dayOfWeek()]).arg(dscrip));
 
     }
@@ -295,7 +295,7 @@ void FpDataProc::procDataForCollection()
         }
 
         QList<QList<QVariant> > lstStrLstContentDutyDetail;
-        //timeflag,round(punch_hours,2),round(punch_hours*payroll_multi,2) AS charge_h,payroll_multi
+        //timeflag,round(punch_hours,2),round(abnormal_hours,2)
         m_pFpDbProc->getDutyDetailByPOIDIDNumberFromMemDb(lstStrLstContentDutyDetail,POID,ID_number);
 
         //获取有打卡记录的日期
@@ -330,7 +330,7 @@ void FpDataProc::procDataForCollection()
 
         //欠工时
         double sumPunchInHours = lstColumnCollection[sumPunchInHourID].toDouble();
-        if (needPunchInHours - sumPunchInHours > 0)
+        if (int(100*(needPunchInHours - sumPunchInHours)) > 0)
         {
             lstColumnCollection << QVariant(needPunchInHours - sumPunchInHours);
         }
@@ -358,22 +358,69 @@ void FpDataProc::procDataForCollection()
 
         //timeflag到打卡工时和付费工时的映射
         QMap<QDate,QList<double> > mapDate2PunchIn;
+        double dMoreHours = 0.0;
+        double dOweHours = lstColumnCollection[oweHourID].toDouble();
+        //qDebug() << lstColumnCollection[5];
         foreach(QList<QVariant> lstDutyDetail,lstStrLstContentDutyDetail)
         {
             mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[1].toDouble();//punch_hours
-            if (int(lstDutyDetail[1].toDouble()) >= 8)
+//            qDebug() << lstDutyDetail[0].toDate();
+//            qDebug() << lstDutyDetail[1].toDouble();
+//            qDebug() << lstDutyDetail[2].toDouble();
+
+            if (1 == mapDate2Type[lstDutyDetail[0].toDate()])//工作日
             {
-                mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8*lstDutyDetail[3].toInt();//charge_hours
-            }
-            else
-            {
-                if (needPunchInHours - sumPunchInHours > 0 || 1 != mapDate2Type[lstDutyDetail[0].toDate()])
+                if (int(100*lstDutyDetail[2].toDouble()) > 0)//当天存在异常工时
                 {
-                    mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[2].toDouble();//charge_hours
+                    mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8 - lstDutyDetail[2].toDouble();
                 }
                 else
                 {
-                    mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8*lstDutyDetail[3].toInt();//charge_hours
+                    if (int(100*dOweHours) == 0)//不欠工时，一律填8小时
+                    {
+                        mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8;//charge_hours
+                    }
+                    else//欠工时，就将多出8小时的工时填补欠工时数，当欠工时为0后，一律填8小时，走上一个case
+                    {
+                        if (int(lstDutyDetail[1].toDouble()) >= 8)//满工时
+                        {
+                            mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8;//charge_hours
+                            dMoreHours += lstDutyDetail[1].toDouble() - 8;
+                        }
+                        else//欠工时
+                        {
+                            if (int(lstDutyDetail[1].toDouble()+dMoreHours) >= 8)//多余工时够补欠工时
+                            {
+                                mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8;//charge_hours
+                                dMoreHours += lstDutyDetail[1].toDouble() - 8;
+                            }
+                            else//多余工时不够补欠工时
+                            {
+                                if (int(lstDutyDetail[1].toDouble()+dMoreHours+dOweHours) >= 8)//算上欠工时后，仍然欠工时，则仅补多余工时
+                                {
+                                    mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[1].toDouble()+dMoreHours;
+                                    dOweHours += lstDutyDetail[1].toDouble()+dMoreHours-8;
+                                }
+                                else//算上欠工时后，仍然欠工时，则补多余工时且补足欠工时数，后续一律补齐8小时
+                                {
+                                    mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8 - dOweHours;
+                                    dOweHours = 0;
+                                }
+                                dMoreHours = 0;
+                            }
+                        }
+                    }
+                }
+            }
+            else//非工作日
+            {
+                if (int(lstDutyDetail[1].toDouble()) >= 8)//满工时
+                {
+                    mapDate2PunchIn[lstDutyDetail[0].toDate()] << 8;//charge_hours
+                }
+                else
+                {
+                    mapDate2PunchIn[lstDutyDetail[0].toDate()] << lstDutyDetail[1].toDouble();//charge_hours;
                 }
             }
         }
@@ -383,12 +430,12 @@ void FpDataProc::procDataForCollection()
         {
             if (mapDate2PunchIn.contains(workDay[0].toDate()))
             {
-                lstColumnCollection << QVariant(mapDate2PunchIn[workDay[0].toDate()][0]);//punch_hours
+                //lstColumnCollection << QVariant(mapDate2PunchIn[workDay[0].toDate()][0]);//punch_hours
                 lstColumnCollection << QVariant(mapDate2PunchIn[workDay[0].toDate()][1]);//charge_hours
             }
             else
             {
-                lstColumnCollection << 0;
+                //lstColumnCollection << 0;
                 lstColumnCollection << 0;
             }
         }
@@ -719,6 +766,7 @@ int FpDataProc::getPunchInHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateTi
 
 int FpDataProc::getOverTimeHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateTime dtEnd)
 {
+    Q_UNUSED(dtTimeFlag);
     int tmpStart = 0;
 //    if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0))) > 0)
 //    {

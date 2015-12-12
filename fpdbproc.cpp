@@ -294,7 +294,7 @@ bool FpDbProc::getDutyDetailByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lst
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = QString("SELECT timeflag,round(punch_hours,2),round(punch_hours*payroll_multi,2) AS charge_h,payroll_multi"
+    strSql = QString("SELECT timeflag,round(punch_hours,2),round(abnormal_hours,2)"
                      " FROM duty_detail"
                      " WHERE POID = '%1' AND ID_number = '%2' AND punch_type IN (0,1)"
                      " ORDER BY timeflag").arg(POID).arg(IDNumber);
