@@ -6,6 +6,8 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
+    app.addLibraryPath("./plugins");
+
     QTextCodec *codec = QTextCodec::codecForName("GBK");
     QTextCodec::setCodecForTr(codec);
     //QTextCodec::setCodecForLocale(codec);
