@@ -7,15 +7,11 @@
 #include <QDebug>
 #include <QDir>
 
-
-const int SheetID = 1;
 const int MaxRow = -1;
-
 
 FpExcelProc::FpExcelProc(QObject *parent) :
     QObject(parent),
-    m_pExcel(NULL),
-    m_fileSaveAsName(QString())
+    m_pExcel(NULL)
 {
 }
 
@@ -28,18 +24,39 @@ FpExcelProc::~FpExcelProc()
     }
 }
 
-bool FpExcelProc::getDataFromExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent)
+bool FpExcelProc::getExcelOpenFile(QString &fileName)
 {
-    QString fileName = QFileDialog::getOpenFileName(0,
-                                                    tr("Import Excel"),
-                                                    QString(),
-                                                    tr("Excel Files (*.xls *.xlsx)"));
+    fileName = QFileDialog::getOpenFileName(0,
+                                            tr("Import Excel"),
+                                            QString(),
+                                            tr("Excel Files (*.xls *.xlsx)"));
+
     if (fileName.isNull())
     {
         //user press cancel
         return false;
     }
+    return true;
+}
 
+bool FpExcelProc::getExcelOpenFileList(QStringList &lstFileName)
+{
+    lstFileName = QFileDialog::getOpenFileNames(0,
+                                                tr("Merge Excel"),
+                                                QString(),
+                                                tr("Excel Files (*.xls *.xlsx)"));
+
+    if (lstFileName.isEmpty())
+    {
+        //user press cancel
+        return false;
+    }
+    return true;
+}
+
+bool FpExcelProc::getDataFromExcel(const QString fileName,
+                                   QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent, const int sheetID)
+{
     if (!QFile::exists(fileName))
     {
         QMessageBox::critical(0,"Error",QString("The File Does Not Exist:%1").arg(fileName));
@@ -62,7 +79,7 @@ bool FpExcelProc::getDataFromExcel(QList<QVariant> &lstTitle, QList<QList<QVaria
         return false;
     }
     //取得第一个工作表
-    m_pExcel->selectSheet(SheetID);
+    m_pExcel->selectSheet(sheetID);
     //取得工作表已使用范围
     int topLeftRow, topLeftColumn, bottomRightRow, bottomRightColumn;
     m_pExcel->getUsedRange(&topLeftRow, &topLeftColumn, &bottomRightRow, &bottomRightColumn);
@@ -118,7 +135,7 @@ bool FpExcelProc::getDataFromExcel(QList<QVariant> &lstTitle, QList<QList<QVaria
     delete m_pExcel;
     m_pExcel = NULL;
 
-    QMessageBox::information(0,"Info",QString("Import Done: %1 ").arg(bottomRightRow+1-topLeftRow));
+    //QMessageBox::information(0,"Info",QString("Import Done: %1 ").arg(bottomRightRow+1-topLeftRow));
 
     return true;
 
@@ -130,38 +147,43 @@ bool FpExcelProc::getDataFromExcel(QList<QVariant> &lstTitle, QList<QList<QVaria
 //    qDebug() << lstLstContent.size();
 }
 
-bool FpExcelProc::prepareExcel(const int sheetNum)
+bool FpExcelProc::getExcelSaveFile(QString &fileName)
 {
-//    if (0 == lstLstContent.size())
-//    {
-//        return true;
-//    }
-
     //prepare for save as file name
-    m_fileSaveAsName = QFileDialog::getSaveFileName(0,
-                                                          tr("Export Excel"),
-                                                          QString(),
-                                                          tr("Excel Files (*.xlsx *.xls)"));
-    if (m_fileSaveAsName.isNull())
+    fileName = QFileDialog::getSaveFileName(0,
+                                          tr("Export Excel"),
+                                          QString(),
+                                          tr("Excel Files (*.xlsx *.xls)"));
+
+    if (fileName.isNull())
     {
         //user press cancel;
         return false;
     }
-    m_fileSaveAsName = QDir::toNativeSeparators(m_fileSaveAsName);
+    fileName = QDir::toNativeSeparators(fileName);
+    return true;
+}
 
-//    if (0 == lstLstContent.size())
-//    {
-//        QMessageBox::information(0,"info","No Data Need To Export");
-//        return false;
-//    }
-
+bool FpExcelProc::prepareExcel(ENUM_XLS_TYPE xlsType, const int sheetNum)
+{
     //load source xls
-    QString sourceFileName = QDir::currentPath()+"./xlsSource/month_total.xlsx";
+    QString sourceFileName;
+    switch (xlsType)
+    {
+    case MONTH_TOTAL:
+        sourceFileName = "month_total.xlsx";
+    case MERGE_TOTAL:
+        sourceFileName = "merge_total.xlsx";
+    default:
+        sourceFileName = "month_total.xlsx";
+    }
+
+    sourceFileName = QDir::currentPath()+"./xlsSource/"+sourceFileName;
     sourceFileName = QDir::toNativeSeparators(QDir::cleanPath(sourceFileName));
 
     if (!QFile::exists(sourceFileName))
     {
-        QMessageBox::critical(0,"Error",QString("The File Does Not Exist:%1").arg(sourceFileName));
+        QMessageBox::critical(0,"Error",QString("The File XlsSource Does Not Exist:%1").arg(sourceFileName));
         return false;
     }
 
@@ -184,15 +206,14 @@ bool FpExcelProc::prepareExcel(const int sheetNum)
     return true;
 }
 
-bool FpExcelProc::saveExcel(const QString excelType)
+bool FpExcelProc::saveExcel(const QString &fileName, const QString excelType)
 {
     if (NULL == m_pExcel)
     {
         return false;
     }
 
-    m_pExcel->saveAs(m_fileSaveAsName,excelType);
-    m_fileSaveAsName = QString();
+    m_pExcel->saveAs(fileName,excelType);
 
     delete m_pExcel;
     m_pExcel = NULL;

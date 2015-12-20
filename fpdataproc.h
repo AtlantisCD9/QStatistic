@@ -21,8 +21,9 @@ public:
     void procDataForCollection();
 
     //Excel proc
-    void getDataFromExcel();
+    bool getDataFromExcel();
     void setDataIntoExcel();
+    void mergeExcel();
 
     //Loacl Db
 

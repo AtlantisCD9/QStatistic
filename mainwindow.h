@@ -22,6 +22,7 @@ private:
     Ui::MainWindow *ui;
 
     QAction *m_actionImportXls;
+    QAction *m_actionMergeXls;
     QAction *m_actionExportXls;
     QMenu *m_menuFile;
 
@@ -46,6 +47,7 @@ private:
 
 private slots:
     void onImportFile();
+    void onMergeFile();
     void onExportFile();
 
     void onAbout();

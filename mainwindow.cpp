@@ -12,7 +12,7 @@
 #include <QStandardItem>
 
 
-const QString FP_VERSION_NUM = "0.1.0.0";
+const QString FP_VERSION_NUM = "0.1.1.0";
 
 
 
@@ -48,6 +48,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_actionImportXls,SIGNAL(triggered()),
             this,SLOT(onImportFile()));
 
+    connect(m_actionMergeXls,SIGNAL(triggered()),
+            this,SLOT(onMergeFile()));
+
     connect(m_actionExportXls,SIGNAL(triggered()),
             this,SLOT(onExportFile()));
 
@@ -69,6 +72,10 @@ void MainWindow::initialMenuFile()
     m_actionImportXls->setObjectName("m_actionImportXls");
     m_actionImportXls->setText(tr("&Import Xls"));
 
+    m_actionMergeXls = new QAction(this);
+    m_actionMergeXls->setObjectName("m_actionMergeXls");
+    m_actionMergeXls->setText(tr("&Merge Xls"));
+
     m_actionExportXls = new QAction(this);
     m_actionExportXls->setObjectName("m_actionExportXls");
     m_actionExportXls->setText(tr("&Export Xls"));
@@ -78,6 +85,7 @@ void MainWindow::initialMenuFile()
     m_menuFile->setTitle(tr("&File"));
 
     m_menuFile->addAction(m_actionImportXls);
+    m_menuFile->addAction(m_actionMergeXls);
     m_menuFile->addAction(m_actionExportXls);
 }
 
@@ -250,7 +258,10 @@ void MainWindow::showCollection(QTableView *tableWidget)
 void MainWindow::onImportFile()
 {
     m_pFpDataProc->initial();
-    m_pFpDataProc->getDataFromExcel();
+    if(!m_pFpDataProc->getDataFromExcel())
+    {
+        return;
+    }
     m_pFpDataProc->procDataForDatail();
     m_pFpDataProc->setDutyDetail();
 
@@ -267,6 +278,12 @@ void MainWindow::onImportFile()
 
     m_actionExportXls->setEnabled(true);
     m_actionImportXls->setDisabled(true);
+
+}
+
+void MainWindow::onMergeFile()
+{
+    m_pFpDataProc->mergeExcel();
 }
 
 void MainWindow::onExportFile()

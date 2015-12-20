@@ -3,6 +3,7 @@
 #include "fpdbproc.h"
 #include "fpexcelproc.h"
 
+#include <QStringList>
 #include <QMap>
 #include <QDate>
 #include <QDateTime>
@@ -444,15 +445,64 @@ void FpDataProc::procDataForCollection()
 
 }
 
-void FpDataProc::getDataFromExcel()
+bool FpDataProc::getDataFromExcel()
 {
-    m_pFpExcelProc->getDataFromExcel(m_lstTitleDetail,m_lstRowLstColumnDetail);
+    QString fileName;
+    if(!m_pFpExcelProc->getExcelOpenFile(fileName))
+    {
+        return false;
+    }
+
+    m_pFpExcelProc->getDataFromExcel(fileName,m_lstTitleDetail,m_lstRowLstColumnDetail);
+    return true;
+
+}
+
+void FpDataProc::mergeExcel()
+{
+    QList<QVariant> lstTitleDetail;//Ã÷Ï¸Ì§Í·
+    QList<QList<QVariant> > lstRowLstColumnDetail;//will be add some proc data
+
+    QStringList lstFileName;
+    if(!m_pFpExcelProc->getExcelOpenFileList(lstFileName))
+    {
+        return;
+    }
+
+    QString saveFileName;
+    if(!m_pFpExcelProc->getExcelSaveFile(saveFileName))
+    {
+        return;
+    }
+
+    foreach(QString fileName,lstFileName)
+    {
+        m_pFpExcelProc->getDataFromExcel(fileName,lstTitleDetail,lstRowLstColumnDetail);
+    }
+    //////-----------------
+
+    if (!m_pFpExcelProc->prepareExcel(FpExcelProc::MERGE_TOTAL))
+    {
+        return;
+    }
+
+    if (0 != lstRowLstColumnDetail.size())
+    {
+        m_pFpExcelProc->setDataIntoExcel(lstTitleDetail,lstRowLstColumnDetail);
+    }
+
+    m_pFpExcelProc->saveExcel(saveFileName,"51");
 }
 
 void FpDataProc::setDataIntoExcel()
 {
+    QString saveFileName;
+    if(!m_pFpExcelProc->getExcelSaveFile(saveFileName))
+    {
+        return;
+    }
 
-    if (!m_pFpExcelProc->prepareExcel(3))
+    if (!m_pFpExcelProc->prepareExcel(FpExcelProc::MONTH_TOTAL,3))
     {
         return;
     }
@@ -473,7 +523,7 @@ void FpDataProc::setDataIntoExcel()
         m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnMissPunchInDetail,3);
     }
 
-    m_pFpExcelProc->saveExcel("51");
+    m_pFpExcelProc->saveExcel(saveFileName,"51");
 
 }
 
