@@ -21,9 +21,9 @@ public:
     void procDataForCollection();
 
     //Excel proc
-    bool getDataFromExcel();
-    void setDataIntoExcel();
-    void mergeExcel();
+    bool getDataFromExcel(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum);
+    void setDataIntoExcel(QString &outPutFile,int &sheetID);
+    void mergeExcel(QStringList &lstMergeFile, QString &outPutFile, int &titleEnd, int &sheetID, int &columnNum);
 
     //Loacl Db
 

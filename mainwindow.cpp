@@ -1,5 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "dialogimportxls.h"
+#include "dialogmergexls.h"
+#include "dialogexportxls.h"
 
 #include "fpdataproc.h"
 #include "globaldef.h"
@@ -19,6 +22,9 @@ const QString FP_VERSION_NUM = "0.1.1.0";
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
+    m_importXls(new DialogImportXls),
+    m_mergeXls(new DialogMergeXls),
+    m_exportXls(new DialogExportXls),
     m_pFpDataProc(new FpDataProc)
 {
     ui->setupUi(this);
@@ -62,6 +68,9 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete m_pFpDataProc;
+    delete m_exportXls;
+    delete m_mergeXls;
+    delete m_importXls;
     delete ui;
 }
 
@@ -257,11 +266,28 @@ void MainWindow::showCollection(QTableView *tableWidget)
 
 void MainWindow::onImportFile()
 {
-    m_pFpDataProc->initial();
-    if(!m_pFpDataProc->getDataFromExcel())
+    if(!m_importXls->exec())
     {
         return;
     }
+
+    QString inPutFile;
+    int headEnd;
+    int sheetID;
+    int columnNum;
+
+//    qDebug() << m_mergeXls->getInfo(lstMergeFile,outPutFile,headEnd);
+//    qDebug() << lstMergeFile;
+//    qDebug() << outputFile;
+//    qDebug() << headEnd;
+    if(!m_importXls->getInfo(inPutFile,headEnd,sheetID,columnNum))
+    {
+        return;
+    }
+
+    m_pFpDataProc->initial();
+    m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum);
+
     m_pFpDataProc->procDataForDatail();
     m_pFpDataProc->setDutyDetail();
 
@@ -283,12 +309,51 @@ void MainWindow::onImportFile()
 
 void MainWindow::onMergeFile()
 {
-    m_pFpDataProc->mergeExcel();
+    if(!m_mergeXls->exec())
+    {
+        return;
+    }
+
+    QStringList lstMergeFile;
+    QString outPutFile;
+    int headEnd;
+    int sheetID;
+    int columnNum;
+
+    if(!m_mergeXls->getInfo(lstMergeFile,outPutFile,headEnd,sheetID,columnNum))
+    {
+        return;
+    }
+//    qDebug() << lstMergeFile;
+//    qDebug() << outPutFile;
+//    qDebug() << headEnd;
+//    qDebug() << sheetID;
+//    qDebug() << columnNum;
+
+    m_pFpDataProc->mergeExcel(lstMergeFile,outPutFile,headEnd,sheetID,columnNum);
 }
 
 void MainWindow::onExportFile()
 {
-    m_pFpDataProc->setDataIntoExcel();
+    if(!m_exportXls->exec())
+    {
+        return;
+    }
+
+    QString outPutFile;
+    int sheetID;
+
+//    qDebug() << m_mergeXls->getInfo(lstMergeFile,outPutFile,headEnd);
+//    qDebug() << lstMergeFile;
+//    qDebug() << outputFile;
+//    qDebug() << headEnd;
+    if(!m_exportXls->getInfo(outPutFile,sheetID))
+    {
+        return;
+    }
+
+    m_pFpDataProc->setDataIntoExcel(outPutFile,sheetID);
+
 }
 
 

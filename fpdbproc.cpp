@@ -115,21 +115,21 @@ bool FpDbProc::prepareMemDb()
         retRes  = retRes && dbOper->dbQureyExec(strSql);
     }
 
-    strSql = "DROP TABLE IF EXISTS duty_collection";
-    retRes  = retRes && dbOper->dbQureyExec(strSql);
-
-//    strSql = "CREATE TABLE duty_collection (               "
-//            "    company             VCHAR,            "
-//            "    area                VCHAR,            "
-//            "    product_line        VCHAR,            "
-//            /*"    year_month          date,             "*/
-//            "    POID                VCHAR,            "
-//            "    job_id              VCHAR,            "
-//            "    name                VCHAR,            "
-//            "    punch_hours         DOUBLE,           "
-//            "    PRIMARY KEY(job_id,name)       "
-//            ")";
+//    strSql = "DROP TABLE IF EXISTS duty_collection";
 //    retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+    if (!dbOper->tablesInDb().contains("employee_info"))
+    {
+        //do not in use
+        strSql = "CREATE TABLE employee_info ("
+                "   identity_card   VCHAR NOT NULL,"
+                "   name            VCHAR NOT NULL,"
+                "   rt_jobid        VCHAR NOT NULL,"
+                "   hw_jobid        VCHAR DEFAULT '',"
+                "   PRIMARY         KEY(identity_card)"
+                ")";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+    }
 
 
     if (retRes)
@@ -177,6 +177,19 @@ bool FpDbProc::prepareLocalDb()
                 "    multiples  INT DEFAULT 0,"
                 "    PRIMARY KEY(e_date),"
                 "    FOREIGN KEY(multiples) REFERENCES payroll_multi(multiples)"
+                ")";
+        retRes  = retRes && dbOper->dbQureyExec(strSql);
+    }
+
+    if (!dbOper->tablesInDb().contains("employee_info"))
+    {
+        //do not in use
+        strSql = "CREATE TABLE employee_info ("
+                "   identity_card   VCHAR NOT NULL,"
+                "   name            VCHAR NOT NULL,"
+                "   rt_jobid        VCHAR DEFAULT '',"
+                "   hw_jobid        VCHAR DEFAULT '',"
+                "   PRIMARY         KEY(identity_card)"
                 ")";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
     }

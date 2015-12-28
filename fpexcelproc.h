@@ -18,17 +18,19 @@ public:
         MERGE_TOTAL
     };
 
-    bool getExcelOpenFile(QString &fileName);
-    bool getExcelOpenFileList(QStringList &lstFileName);
+//    bool getExcelOpenFile(QString &fileName);
+//    bool getExcelOpenFileList(QStringList &lstFileName);
     bool getDataFromExcel(const QString fileName,
-                          QList<QVariant> &lstTitle,QList<QList<QVariant> > &lstLstContent,const int sheetID=1);
+                          QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent,
+                          const int titleEndID=1, const int sheetID=1, const int columnNum=0);
 
     QString getExcelColumnName(const int column);
 
 
-    bool getExcelSaveFile(QString &fileName);
+//    bool getExcelSaveFile(QString &fileName);
     bool prepareExcel(ENUM_XLS_TYPE xlsType,const int sheetNum=3);
-    bool setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent, const int sheetID=1);
+    bool setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent,
+                          const int titleEndID=1,const int sheetID=1);
     bool saveExcel(const QString &fileName,const QString excelType="51");
 
 private:

@@ -10,6 +10,10 @@ namespace Ui {
 class MainWindow;
 }
 
+class DialogImportXls;
+class DialogMergeXls;
+class DialogExportXls;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -20,6 +24,9 @@ public:
     
 private:
     Ui::MainWindow *ui;
+    DialogImportXls *m_importXls;
+    DialogMergeXls *m_mergeXls;
+    DialogExportXls *m_exportXls;
 
     QAction *m_actionImportXls;
     QAction *m_actionMergeXls;

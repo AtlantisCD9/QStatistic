@@ -445,39 +445,38 @@ void FpDataProc::procDataForCollection()
 
 }
 
-bool FpDataProc::getDataFromExcel()
+bool FpDataProc::getDataFromExcel(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum)
 {
-    QString fileName;
-    if(!m_pFpExcelProc->getExcelOpenFile(fileName))
-    {
-        return false;
-    }
-
-    m_pFpExcelProc->getDataFromExcel(fileName,m_lstTitleDetail,m_lstRowLstColumnDetail);
+    m_pFpExcelProc->getDataFromExcel(inPutFile,m_lstTitleDetail,m_lstRowLstColumnDetail,
+                                     titleEnd,sheetID,columnNum);
     return true;
-
 }
 
-void FpDataProc::mergeExcel()
+void FpDataProc::mergeExcel(QStringList &lstMergeFile, QString &outPutFile, int &titleEnd, int &sheetID, int &columnNum)
 {
+    //lstMergeFile,outputFile,headEnd,sheetID
     QList<QVariant> lstTitleDetail;//Ã÷Ï¸Ì§Í·
     QList<QList<QVariant> > lstRowLstColumnDetail;//will be add some proc data
 
-    QStringList lstFileName;
-    if(!m_pFpExcelProc->getExcelOpenFileList(lstFileName))
-    {
-        return;
-    }
+//    QStringList lstFileName;
+//    if(!m_pFpExcelProc->getExcelOpenFileList(lstFileName))
+//    {
+//        return;
+//    }
 
-    QString saveFileName;
-    if(!m_pFpExcelProc->getExcelSaveFile(saveFileName))
-    {
-        return;
-    }
+//    QString saveFileName;
+//    if(!m_pFpExcelProc->getExcelSaveFile(saveFileName))
+//    {
+//        return;
+//    }
 
-    foreach(QString fileName,lstFileName)
+    foreach(QString fileName,lstMergeFile)
     {
-        m_pFpExcelProc->getDataFromExcel(fileName,lstTitleDetail,lstRowLstColumnDetail);
+        m_pFpExcelProc->getDataFromExcel(fileName,lstTitleDetail,lstRowLstColumnDetail,titleEnd,sheetID,columnNum);
+//        foreach(QList<QVariant> lstColumn,lstRowLstColumnDetail)
+//        {
+//            qDebug() << lstColumn;
+//        }
     }
     //////-----------------
 
@@ -491,39 +490,33 @@ void FpDataProc::mergeExcel()
         m_pFpExcelProc->setDataIntoExcel(lstTitleDetail,lstRowLstColumnDetail);
     }
 
-    m_pFpExcelProc->saveExcel(saveFileName,"51");
+    m_pFpExcelProc->saveExcel(outPutFile,"51");
 }
 
-void FpDataProc::setDataIntoExcel()
+void FpDataProc::setDataIntoExcel(QString &outPutFile, int &sheetID)
 {
-    QString saveFileName;
-    if(!m_pFpExcelProc->getExcelSaveFile(saveFileName))
-    {
-        return;
-    }
-
-    if (!m_pFpExcelProc->prepareExcel(FpExcelProc::MONTH_TOTAL,3))
+    if (!m_pFpExcelProc->prepareExcel(FpExcelProc::MONTH_TOTAL,sheetID+2))
     {
         return;
     }
 
     if (0 != m_lstRowLstColumnCollection.size())
     {
-        m_pFpExcelProc->setDataIntoExcel(m_lstTitleCollection,m_lstRowLstColumnCollection,1);
+        m_pFpExcelProc->setDataIntoExcel(m_lstTitleCollection,m_lstRowLstColumnCollection,1,sheetID);
     }
 
 
     if (0 != m_lstRowLstColumnBelateOrLeaveEarlyDetail.size())
     {
-        m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnBelateOrLeaveEarlyDetail,2);
+        m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnBelateOrLeaveEarlyDetail,1,sheetID+1);
     }
 
     if (0 != m_lstRowLstColumnMissPunchInDetail.size())
     {
-        m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnMissPunchInDetail,3);
+        m_pFpExcelProc->setDataIntoExcel(m_lstTitleDetail,m_lstRowLstColumnMissPunchInDetail,1,sheetID+2);
     }
 
-    m_pFpExcelProc->saveExcel(saveFileName,"51");
+    m_pFpExcelProc->saveExcel(outPutFile,"51");
 
 }
 

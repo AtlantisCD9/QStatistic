@@ -21,7 +21,10 @@ SOURCES += main.cpp\
     dboper.cpp \
     fpdbproc.cpp \
     fpexcelproc.cpp \
-    fpdataproc.cpp
+    fpdataproc.cpp \
+    dialogimportxls.cpp \
+    dialogmergexls.cpp \
+    dialogexportxls.cpp
 
 HEADERS  += mainwindow.h\
             qexcel.h \
@@ -29,6 +32,12 @@ HEADERS  += mainwindow.h\
     fpdbproc.h \
     fpexcelproc.h \
     fpdataproc.h \
-    globaldef.h
+    globaldef.h \
+    dialogimportxls.h \
+    dialogmergexls.h \
+    dialogexportxls.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    dialogimportxls.ui \
+    dialogmergexls.ui \
+    dialogexportxls.ui
