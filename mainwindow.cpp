@@ -275,35 +275,60 @@ void MainWindow::onImportFile()
     int headEnd;
     int sheetID;
     int columnNum;
+    ENUM_IMPORT_XLS_TYPE import_type;
 
 //    qDebug() << m_mergeXls->getInfo(lstMergeFile,outPutFile,headEnd);
 //    qDebug() << lstMergeFile;
 //    qDebug() << outputFile;
 //    qDebug() << headEnd;
-    if(!m_importXls->getInfo(inPutFile,headEnd,sheetID,columnNum))
+    if(!m_importXls->getInfo(inPutFile,headEnd,sheetID,columnNum,import_type))
     {
         return;
     }
 
-    m_pFpDataProc->initial();
-    m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum);
+    switch(import_type)
+    {
+    case IM_DETAIL:
+        m_pFpDataProc->initial(IM_DETAIL);
+        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_DETAIL);
 
-    m_pFpDataProc->procDataForDatail();
-    m_pFpDataProc->setDutyDetail();
+        m_pFpDataProc->procDataForDatail();
+        m_pFpDataProc->setDutyDetail();
+        break;
+    case IM_ABNORMAL:
+        m_pFpDataProc->initial(IM_ABNORMAL);
+        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_ABNORMAL);
 
-    m_pFpDataProc->getBelateOrLeaveEarlyDetail();
-    m_pFpDataProc->getMissPunchInDetail();
+        m_pFpDataProc->procDataAbnormal();
+        m_pFpDataProc->setProcAbnormalDetail();
+        break;
+    case IM_PO_SWITCH:
+        m_pFpDataProc->initial(IM_PO_SWITCH);
+        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_PO_SWITCH);
+        //#Atlantis#
+        break;
+    case IM_STATISTICS:
+        m_pFpDataProc->initial(IM_STATISTICS);
+        //刷新数据库，更新异常工时处理信息#Atlantis#
+        m_pFpDataProc->updateDutyDetailByProcAbnormalDetail();
 
-    m_pFpDataProc->getDistinctPersonal();
-    m_pFpDataProc->procDataForCollection();
+        m_pFpDataProc->getBelateOrLeaveEarlyDetail();
+        m_pFpDataProc->getMissPunchInDetail();
 
-    showDetail(ui->tableView_detail);
-    showDetailBelateOrLeaveEarly(ui->tableView_beLateOrLeaveEarly);
-    showDetailMissPunchIn(ui->tableView_missPunchIn);
-    showCollection(ui->tableView_monthCollect);
+        m_pFpDataProc->getDistinctPersonal();
+        m_pFpDataProc->procDataForCollection();
 
-    m_actionExportXls->setEnabled(true);
-    m_actionImportXls->setDisabled(true);
+        showDetail(ui->tableView_detail);
+        showDetailBelateOrLeaveEarly(ui->tableView_beLateOrLeaveEarly);
+        showDetailMissPunchIn(ui->tableView_missPunchIn);
+        showCollection(ui->tableView_monthCollect);
+
+        m_actionExportXls->setEnabled(true);
+        m_actionImportXls->setDisabled(true);
+        break;
+    default:
+        break;
+    }
 
 }
 

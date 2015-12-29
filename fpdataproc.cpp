@@ -3,15 +3,15 @@
 #include "fpdbproc.h"
 #include "fpexcelproc.h"
 
+#include "globaldef.h"
+
 #include <QStringList>
 #include <QMap>
 #include <QDate>
 #include <QDateTime>
 #include <QVariant>
 #include <QDebug>
-
-const int OnDutyID = 7;
-const int OffDutyID = 8;
+#include <QMessageBox>
 
 FpDataProc::FpDataProc(QObject *parent) :
     QObject(parent)
@@ -30,21 +30,168 @@ FpDataProc::~FpDataProc()
     delete m_pFpExcelProc;
 }
 
-void FpDataProc::initial()
+void FpDataProc::initial(ENUM_IMPORT_XLS_TYPE importType)
 {
-    m_lstTitleDetail.clear();//明细抬头
-    m_lstTitleCollection.clear();//汇总抬头
+    switch(importType)
+    {
+    case IM_DETAIL:
+        m_lstTitleDetail.clear();//明细抬头
+        m_lstRowLstColumnDetail.clear();//will be add some proc data
+        m_pFpDbProc->initDutyDetailMemDb();
+        break;
+    case IM_ABNORMAL:
+        m_lstTitleAbnormal.clear();//明细抬头
+        m_lstRowLstColumnAbnormal.clear();//will be add some proc data
+        m_pFpDbProc->initProcAbnormalDetailMemDb();
+        break;
+    case IM_PO_SWITCH:
+        m_lstTitlePOSwitch.clear();//明细抬头
+        m_lstRowLstColumnPOSwitch.clear();//will be add some proc data
+        //#Atlantis#
+        break;
+    default:
+        m_lstTitleCollection.clear();//汇总抬头
+        m_lstRowLstColumnBelateOrLeaveEarlyDetail.clear();//will be add some proc data
+        m_lstRowLstColumnMissPunchInDetail.clear();//will be add some proc data
+        m_lstRowLstColumnCollection.clear();//for month collection will be add some proc data
+        break;
+    }
 
-    m_lstRowLstColumnDetail.clear();//will be add some proc data
 
-    m_lstRowLstColumnBelateOrLeaveEarlyDetail.clear();//will be add some proc data
-    m_lstRowLstColumnMissPunchInDetail.clear();//will be add some proc data
-    m_lstRowLstColumnCollection.clear();//for month collection will be add some proc data
+
+}
+
+double FpDataProc::getAbnormalHourMID(int secsTemp)
+{
+    if (secsTemp < 0)
+    {
+        secsTemp = 0;
+    }
+
+    int itemp = int(secsTemp*1.0/3600*100);
+    int ihead = itemp/100;
+    int itail = itemp%100;
+    double dAbnormalHour = 0.0;
+    if (0 == itemp)
+    {
+        dAbnormalHour = 0;
+    }
+    else if (itail > 50)
+    {
+        dAbnormalHour = ihead+1;
+    }
+    else
+    {
+        dAbnormalHour = ihead+0.5;
+    }
+
+    return dAbnormalHour;
+}
+
+QDateTime FpDataProc::getTimeFlag(QDateTime dtStart)
+{
+    QDateTime dtTimeFlag;
+    if (dtStart.time() >= QTime(5,1))
+    {
+        dtTimeFlag = QDateTime(dtStart.date(),QTime(0,0));
+    }
+    else
+    {
+        dtTimeFlag = QDateTime(dtStart.date().addDays(-1),QTime(0,0));
+    }
+
+    return dtTimeFlag;
+}
+
+int FpDataProc::getPunchType(QDateTime dtTimeFlag, QDateTime dtStart, QDateTime dtEnd)
+{
+    //punch_type:0,normal;1,beLate or leaveEarly;2,abnormal;
+    int punchType;
+    if (dtEnd.isNull())
+    {
+        punchType = PUNCH_ABNORMAL;//abnormal
+    }
+    else
+    {
+        if(dtStart >= QDateTime(dtTimeFlag.date(),QTime(9,1))
+                || dtEnd < QDateTime(dtTimeFlag.date(),QTime(17,30)))
+        {
+           punchType = PUNCH_BELATE_OR_LEAVEEARLY;//beLate or leaveEarly
+        }
+        else
+        {
+            punchType = PUNCH_NORMAL;//normal
+        }
+    }
+
+    return punchType;
+}
+
+double FpDataProc::getAbnormalHourFNL(QDateTime dtTimeFlag, QDateTime dtStart, QDateTime dtEnd,
+                                   int punchType, int payrollMulti)
+{
+    double abnormalHour;
+
+    if (punchType == int(PUNCH_ABNORMAL))
+    {
+        abnormalHour = 0;//打卡异常的异常工时此处统一设置成0，在汇总处理时统一刷新
+
+    }
+    else if (punchType == int(PUNCH_BELATE_OR_LEAVEEARLY))
+    {
+        if (1 == payrollMulti)
+        {
+            int secsTemp = 8*3600-getAbnormalHours(dtTimeFlag,dtStart,dtEnd);
+            abnormalHour = getAbnormalHourMID(secsTemp);
+        }
+        else
+        {
+            abnormalHour = 0;
+        }
+    }
+    else
+    {
+        abnormalHour = 0;
+    }
+
+    return abnormalHour;
+}
+
+double FpDataProc::getPunchHour(QDateTime dtTimeFlag, QDateTime dtStart, QDateTime dtEnd, int payrollMulti)
+{
+    double punchHour;
+    if (!dtEnd.isNull())
+    {
+        if (1 == payrollMulti)
+        {
+            punchHour = getPunchInHours(dtTimeFlag,dtStart,dtEnd)*1.0/3600;
+        }
+        else
+        {
+            int overTimeHours = 8*3600;
+            if (getOverTimeHours(dtTimeFlag,dtStart,dtEnd) < overTimeHours)
+            {
+                overTimeHours = getOverTimeHours(dtTimeFlag,dtStart,dtEnd);
+            }
+            punchHour = overTimeHours*1.0/3600;
+        }
+    }
+    else
+    {
+        punchHour = 0.0;
+    }
+
+    return punchHour;
 }
 
 
 void FpDataProc::procDataForDatail()
 {
+    //上班时间
+    const int onDutyID = 7;
+    //下班时间
+    const int offDutyID = 8;
+
     QMap<QDate,int> mapDate2Type;
     foreach(QList<QVariant> workDay,m_lstRowLstColumnWorkDays)
     {
@@ -54,17 +201,9 @@ void FpDataProc::procDataForDatail()
     //QList<QVariant> lstTitle;
     for(int i=0;i<m_lstRowLstColumnDetail.size();++i)
     {
-        QDateTime dtTimeFlag;
-        QDateTime dtStart = m_lstRowLstColumnDetail[i][OnDutyID].toDateTime();
-        QDateTime dtEnd = m_lstRowLstColumnDetail[i][OffDutyID].toDateTime();
-        if (dtStart.time() >= QTime(5,1))
-        {
-            dtTimeFlag = QDateTime(dtStart.date(),QTime(0,0));
-        }
-        else
-        {
-            dtTimeFlag = QDateTime(dtStart.date().addDays(-1),QTime(0,0));
-        }
+        QDateTime dtStart = m_lstRowLstColumnDetail[i][onDutyID].toDateTime();
+        QDateTime dtEnd = m_lstRowLstColumnDetail[i][offDutyID].toDateTime();
+        QDateTime dtTimeFlag = getTimeFlag(dtStart);
 
         //timeflag
         m_lstRowLstColumnDetail[i] << QVariant(dtTimeFlag);
@@ -73,110 +212,75 @@ void FpDataProc::procDataForDatail()
         m_lstRowLstColumnDetail[i] << QVariant(dtTimeFlag.date().dayOfWeek());
 
         //punch_type:0,normal;1,beLate or leaveEarly;2,abnormal;
-        if (dtEnd.isNull())
-        {
-            m_lstRowLstColumnDetail[i] << QVariant(2);//abnormal
-        }
-        else
-        {
-            if(dtStart >= QDateTime(dtTimeFlag.date(),QTime(9,1))
-                    || dtEnd < QDateTime(dtTimeFlag.date(),QTime(17,30)))
-            {
-               m_lstRowLstColumnDetail[i] << QVariant(1);//beLate or leaveEarly
-            }
-            else
-            {
-                m_lstRowLstColumnDetail[i] << QVariant(0);//normal
-            }
-        }
+        m_lstRowLstColumnDetail[i] << QVariant(getPunchType(dtTimeFlag,dtStart,dtEnd));
 
         //abnormal_hours
-        if (m_lstRowLstColumnDetail[i].last() == QVariant(2))
-        {
-//            if (1 == mapDate2Type[dtTimeFlag.date()])
-//            {
-//                m_lstRowLstColumnDetail[i] << QVariant(8);
-//            }
-//            else
-//            {
-//                m_lstRowLstColumnDetail[i] << QVariant(0);
-//            }
-            m_lstRowLstColumnDetail[i] << QVariant(0);//打卡异常的异常工时此处统一设置成0，在汇总处理时统一刷新
-
-        }
-        else if (m_lstRowLstColumnDetail[i].last() == QVariant(1))
-        {
-            if (1 == mapDate2Type[dtTimeFlag.date()])
-            {
-                int secsTemp = 8*3600-getAbnormalHours(dtTimeFlag,dtStart,dtEnd);
-                if (secsTemp < 0)
-                {
-                    secsTemp = 0;
-                }
-
-                int itemp = int(secsTemp*1.0/3600*100);
-                int ihead = itemp/100;
-                int itail = itemp%100;
-                double dAbnormalHour = 0.0;
-                if (0 == itemp)
-                {
-                    dAbnormalHour = 0;
-                }
-                else if (itail > 50)
-                {
-                    dAbnormalHour = ihead+1;
-                }
-                else
-                {
-                    dAbnormalHour = ihead+0.5;
-                }
-                m_lstRowLstColumnDetail[i] << QVariant(dAbnormalHour);
-            }
-            else
-            {
-                m_lstRowLstColumnDetail[i] << QVariant(0);
-            }
-        }
-        else
-        {
-            m_lstRowLstColumnDetail[i] << QVariant(0);
-        }
+        m_lstRowLstColumnDetail[i] << QVariant(getAbnormalHourFNL(dtTimeFlag,dtStart,dtEnd,
+                                                                  m_lstRowLstColumnDetail[i].last().toInt(),
+                                                                  mapDate2Type[dtTimeFlag.date()]));
 
         //punch_hours
-        if (!dtEnd.isNull())
-        {
-            if (1 == mapDate2Type[dtTimeFlag.date()])
-            {
-                m_lstRowLstColumnDetail[i] << QVariant(getPunchInHours(dtTimeFlag,dtStart,dtEnd)*1.0/3600);
-            }
-            else
-            {
-                int overTimeHours = 8*3600;
-                if (getOverTimeHours(dtTimeFlag,dtStart,dtEnd) < overTimeHours)
-                {
-                    overTimeHours = getOverTimeHours(dtTimeFlag,dtStart,dtEnd);
-                }
-                m_lstRowLstColumnDetail[i] << QVariant(overTimeHours*1.0/3600);
-            }
-        }
-        else
-        {
-            m_lstRowLstColumnDetail[i] << QVariant(0.0);
-        }
+        m_lstRowLstColumnDetail[i] << QVariant(getPunchHour(dtTimeFlag,dtStart,dtEnd,
+                                                            mapDate2Type[dtTimeFlag.date()]));
 
         //payroll_multi
         m_lstRowLstColumnDetail[i] << QVariant(mapDate2Type[dtTimeFlag.date()]);
 
         //charge_hours
         m_lstRowLstColumnDetail[i] << QVariant(0.0);
-
-
-
-
-
-
-        //qDebug() << m_lstRowLstColumnDetail[i];
     }
+}
+
+void FpDataProc::procDataAbnormal()
+{
+    //po号码
+    const int poID = 0;
+    //姓名
+    const int name = 1;
+    //上班时间
+    const int onDutyID = 3;
+    //下班时间
+    const int offDutyID = 4;
+
+
+    QMap<QDate,int> mapDate2Type;
+    foreach(QList<QVariant> workDay,m_lstRowLstColumnWorkDays)
+    {
+        mapDate2Type[workDay[0].toDate()] = workDay[1].toInt();
+    }
+
+    //QList<QVariant> lstTitle;
+    for(int i=0;i<m_lstRowLstColumnAbnormal.size();++i)
+    {
+        QDateTime dtStart = m_lstRowLstColumnAbnormal[i][onDutyID].toDateTime();
+        QDateTime dtEnd = m_lstRowLstColumnAbnormal[i][offDutyID].toDateTime();
+        QDateTime dtTimeFlag = getTimeFlag(dtStart);
+
+        if(dtTimeFlag.date() != dtStart.date() || dtTimeFlag.date() != dtEnd.date())
+        {
+            QMessageBox::information(0,"ERROR",
+                                     QString("异常工时处理表单，存在开始和结束时间不是同一天\nPO号码：%1\n姓名：%2\n该条记录不能被处理")
+                                     .arg(m_lstRowLstColumnAbnormal[i][poID].toString())
+                                     .arg(m_lstRowLstColumnAbnormal[i][name].toString()));
+            break;
+        }
+
+        //timeflag
+        m_lstRowLstColumnAbnormal[i] << QVariant(dtTimeFlag);
+
+        //punch_type:0,normal;1,beLate or leaveEarly;2,abnormal;
+        m_lstRowLstColumnAbnormal[i] << QVariant(getPunchType(dtTimeFlag,dtStart,dtEnd));
+
+        //abnormal_hours
+        m_lstRowLstColumnAbnormal[i] << QVariant(getAbnormalHourFNL(dtTimeFlag,dtStart,dtEnd,
+                                                                  m_lstRowLstColumnAbnormal[i].last().toInt(),
+                                                                  mapDate2Type[dtTimeFlag.date()]));
+
+        //punch_hours
+        m_lstRowLstColumnAbnormal[i] << QVariant(getPunchHour(dtTimeFlag,dtStart,dtEnd,
+                                                            mapDate2Type[dtTimeFlag.date()]));
+    }
+
 }
 
 void FpDataProc::procDataForCollection()
@@ -322,6 +426,7 @@ void FpDataProc::procDataForCollection()
         }
 
         //应服务工时
+        //此处，应服务工时需要结合出项入项数据#Atlantis#
         lstColumnCollection << QVariant(workDaysNum*8-lstColumnCollection[abnormalHourID].toDouble());
         double needPunchInHours = lstColumnCollection[needPunchInHourID].toDouble();
 //        qDebug() << lstColumnCollection[5];
@@ -436,6 +541,7 @@ void FpDataProc::procDataForCollection()
             }
             else
             {
+                //此处，应服务工时需要结合出项入项数据#Atlantis#
                 //lstColumnCollection << 0;
                 lstColumnCollection << 0;
             }
@@ -445,10 +551,26 @@ void FpDataProc::procDataForCollection()
 
 }
 
-bool FpDataProc::getDataFromExcel(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum)
+bool FpDataProc::getDataFromExcel(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum, ENUM_IMPORT_XLS_TYPE import_type)
 {
-    m_pFpExcelProc->getDataFromExcel(inPutFile,m_lstTitleDetail,m_lstRowLstColumnDetail,
-                                     titleEnd,sheetID,columnNum);
+    switch(import_type)
+    {
+    case IM_DETAIL:
+        m_pFpExcelProc->getDataFromExcel(inPutFile,m_lstTitleDetail,m_lstRowLstColumnDetail,
+                                         titleEnd,sheetID,columnNum);
+        break;
+    case IM_ABNORMAL:
+        m_pFpExcelProc->getDataFromExcel(inPutFile,m_lstTitleAbnormal,m_lstRowLstColumnAbnormal,
+                                         titleEnd,sheetID,columnNum);
+        break;
+    case IM_PO_SWITCH:
+        m_pFpExcelProc->getDataFromExcel(inPutFile,m_lstTitlePOSwitch,m_lstRowLstColumnPOSwitch,
+                                         titleEnd,sheetID,columnNum);
+        break;
+    default:
+        break;
+    }
+
     return true;
 }
 
@@ -480,7 +602,7 @@ void FpDataProc::mergeExcel(QStringList &lstMergeFile, QString &outPutFile, int 
     }
     //////-----------------
 
-    if (!m_pFpExcelProc->prepareExcel(FpExcelProc::MERGE_TOTAL))
+    if (!m_pFpExcelProc->prepareExcel(EX_MERGE_TOTAL))
     {
         return;
     }
@@ -495,7 +617,7 @@ void FpDataProc::mergeExcel(QStringList &lstMergeFile, QString &outPutFile, int 
 
 void FpDataProc::setDataIntoExcel(QString &outPutFile, int &sheetID)
 {
-    if (!m_pFpExcelProc->prepareExcel(FpExcelProc::MONTH_TOTAL,sheetID+2))
+    if (!m_pFpExcelProc->prepareExcel(EX_MONTH_TOTAL,sheetID+2))
     {
         return;
     }
@@ -628,6 +750,26 @@ void FpDataProc::getDistinctPersonal()
 //    }
 //    m_pFpDbProc->setDutyCollectionIntoMemDb(m_lstRowLstColumnCollection);
 //}
+
+void FpDataProc::updateDutyDetailByProcAbnormalDetail()
+{
+    m_pFpDbProc->updateDutyDetailByProcAbnormalDetail();
+}
+
+void FpDataProc::setProcAbnormalDetail()
+{
+    if (0 == m_lstRowLstColumnAbnormal.size())
+    {
+        return;
+    }
+
+    if (!m_pFpDbProc->prepareMemDb())
+    {
+        qDebug() << "Db Open Failed";
+        return;
+    }
+    m_pFpDbProc->setProcAbnormalDetailIntoMemDb(m_lstRowLstColumnAbnormal);
+}
 
 void FpDataProc::setDutyDetail()
 {

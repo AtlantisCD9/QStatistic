@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QDateTime>
 
+#include "globaldef.h"
+
 class FpDbProc;
 class FpExcelProc;
 
@@ -14,20 +16,27 @@ public:
     explicit FpDataProc(QObject *parent = 0);
     ~FpDataProc();
 
-    void initial();
+    void initial(ENUM_IMPORT_XLS_TYPE importType);
 
     //Data proc
     void procDataForDatail();
+    void procDataAbnormal();
     void procDataForCollection();
 
     //Excel proc
-    bool getDataFromExcel(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum);
+    bool getDataFromExcel(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum,
+                          ENUM_IMPORT_XLS_TYPE import_type);
     void setDataIntoExcel(QString &outPutFile,int &sheetID);
     void mergeExcel(QStringList &lstMergeFile, QString &outPutFile, int &titleEnd, int &sheetID, int &columnNum);
 
     //Loacl Db
 
     //Mem Db
+    //根据异常工时处理内容，刷新工时明细表格
+    void updateDutyDetailByProcAbnormalDetail();
+
+    void setProcAbnormalDetail();
+
     void setDutyDetail();
     const QList<QVariant> &getDutyDetailTitle(){return m_lstTitleDetail;}
     const QString &getDutyDetailSQL();
@@ -52,6 +61,13 @@ private:
 
     bool getAndCheckCurMonth();//example:201510
 
+    double getAbnormalHourMID(int secsTemp);
+    QDateTime getTimeFlag(QDateTime dtStart);
+    int getPunchType(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd);
+    double getAbnormalHourFNL(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd,int punchType,int payrollMulti);
+    double getPunchHour(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd,int payrollMulti);
+
+
     int getAbnormalHours(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd);
     int getPunchInHours(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd);
     int getOverTimeHours(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd);
@@ -63,6 +79,13 @@ private:
 
     QList<QVariant> m_lstTitleDetail;//明细抬头
     QList<QVariant> m_lstTitleCollection;//汇总抬头
+
+    QList<QVariant> m_lstTitleAbnormal;//异常处理表抬头
+    QList<QList<QVariant> > m_lstRowLstColumnAbnormal;//异常处理表明细
+
+    QList<QVariant> m_lstTitlePOSwitch;//PO切换表抬头
+    QList<QList<QVariant> > m_lstRowLstColumnPOSwitch;//PO切换表明细
+
 
     QList<QList<QVariant> > m_lstRowLstColumnDetail;//will be add some proc data
 

@@ -41,22 +41,11 @@ FpDbProc::~FpDbProc()
     m_bIsLocalPrepared = false;
 }
 
-bool FpDbProc::prepareMemDb()
+bool FpDbProc::initDutyDetailDb(DbOper *argDbOper)
 {
     bool retRes = true;
     QString strSql;
-    DbOper *dbOper = m_pDbOperMem;
-
-    if (m_bIsMemPrepared)
-    {
-        return retRes;
-    }
-
-    retRes = retRes && dbOper->dbOpen();
-    if (!retRes)
-    {
-        return retRes;
-    }
+    DbOper *dbOper = argDbOper;
 
     strSql = "DROP TABLE IF EXISTS duty_detail";
     retRes  = retRes && dbOper->dbQureyExec(strSql);
@@ -85,6 +74,42 @@ bool FpDbProc::prepareMemDb()
             ")";
     retRes  = retRes && dbOper->dbQureyExec(strSql);
 
+    return retRes;
+}
+
+bool FpDbProc::initProcAbnormalDetailDb(DbOper *argDbOper)
+{
+    bool retRes = true;
+    QString strSql;
+    DbOper *dbOper = argDbOper;
+
+    strSql = "DROP TABLE IF EXISTS proc_abnormal_detail";
+    retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+    strSql = "CREATE TABLE proc_abnormal_detail (      "
+            "    POID                VCHAR,            "
+            "    name                VCHAR,            "
+            "    ID_number           VCHAR Not Null,   "
+            "    on_duty             DATETIME,         "
+            "    off_duty            DATETIME,         "
+            "    remark              VCHAR,            "
+            "    timeflag            DATETIME,         "
+            "    punch_type          INT,              "
+            "    abnormal_hours      DOUBLE,           "
+            "    punch_hours         DOUBLE,           "
+            "    PRIMARY KEY(ID_number,timeflag)       "
+            ")";
+    retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+    return retRes;
+}
+
+bool FpDbProc::initDaysPayrollMultiDb(DbOper *argDbOper)
+{
+    bool retRes = true;
+    QString strSql;
+    DbOper *dbOper = argDbOper;
+
     if (!dbOper->tablesInDb().contains("days_payroll_multi"))
     {
         strSql = "CREATE TABLE payroll_multi ("
@@ -109,14 +134,20 @@ bool FpDbProc::prepareMemDb()
                 ")";
         retRes  = retRes && dbOper->dbQureyExec(strSql);
     }
-    else
-    {
-        strSql = "DELETE FROM days_payroll_multi";
-        retRes  = retRes && dbOper->dbQureyExec(strSql);
-    }
+//    else
+//    {
+//        strSql = "DELETE FROM days_payroll_multi";
+//        retRes  = retRes && dbOper->dbQureyExec(strSql);
+//    }
 
-//    strSql = "DROP TABLE IF EXISTS duty_collection";
-//    retRes  = retRes && dbOper->dbQureyExec(strSql);
+    return retRes;
+}
+
+bool FpDbProc::initEmployeeInfoDb(DbOper *argDbOper)
+{
+    bool retRes = true;
+    QString strSql;
+    DbOper *dbOper = argDbOper;
 
     if (!dbOper->tablesInDb().contains("employee_info"))
     {
@@ -131,6 +162,32 @@ bool FpDbProc::prepareMemDb()
         retRes  = retRes && dbOper->dbQureyExec(strSql);
     }
 
+    return retRes;
+}
+
+bool FpDbProc::prepareMemDb()
+{
+    bool retRes = true;
+    DbOper *dbOper = m_pDbOperMem;
+
+    if (m_bIsMemPrepared)
+    {
+        return retRes;
+    }
+
+    retRes = retRes && dbOper->dbOpen();
+    if (!retRes)
+    {
+        return retRes;
+    }
+
+    retRes = retRes && initDutyDetailDb(dbOper);
+
+    retRes = retRes && initProcAbnormalDetailDb(dbOper);
+
+    retRes = retRes && initDaysPayrollMultiDb(dbOper);
+
+    retRes = retRes && initEmployeeInfoDb(dbOper);
 
     if (retRes)
     {
@@ -142,7 +199,6 @@ bool FpDbProc::prepareMemDb()
 bool FpDbProc::prepareLocalDb()
 {
     bool retRes = true;
-    QString strSql;
     DbOper *dbOper = m_pDbOperLocal;
 
     if (m_bIsLocalPrepared)
@@ -156,43 +212,9 @@ bool FpDbProc::prepareLocalDb()
         return retRes;
     }
 
-    if (!dbOper->tablesInDb().contains("days_payroll_multi"))
-    {
-        strSql = "CREATE TABLE payroll_multi ("
-                "    multiples  INT NOT NULL,"
-                "    descrip    VCHAR DEFAULT '',"
-                "    PRIMARY    KEY(multiples)"
-                ")";
-        retRes  = retRes && dbOper->dbQureyExec(strSql);
+    retRes = retRes && initDaysPayrollMultiDb(dbOper);
 
-        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (1,'工作日');";
-        retRes  = retRes && dbOper->dbQureyExec(strSql);
-        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (2,'公休日');";
-        retRes  = retRes && dbOper->dbQureyExec(strSql);
-        strSql = "INSERT INTO payroll_multi(multiples,descrip) VALUES (3,'节假日')";
-        retRes  = retRes && dbOper->dbQureyExec(strSql);
-
-        strSql = "CREATE TABLE days_payroll_multi ("
-                "    e_date     DATE NOT NULL,"
-                "    multiples  INT DEFAULT 0,"
-                "    PRIMARY KEY(e_date),"
-                "    FOREIGN KEY(multiples) REFERENCES payroll_multi(multiples)"
-                ")";
-        retRes  = retRes && dbOper->dbQureyExec(strSql);
-    }
-
-    if (!dbOper->tablesInDb().contains("employee_info"))
-    {
-        //do not in use
-        strSql = "CREATE TABLE employee_info ("
-                "   identity_card   VCHAR NOT NULL,"
-                "   name            VCHAR NOT NULL,"
-                "   rt_jobid        VCHAR DEFAULT '',"
-                "   hw_jobid        VCHAR DEFAULT '',"
-                "   PRIMARY         KEY(identity_card)"
-                ")";
-        retRes  = retRes && dbOper->dbQureyExec(strSql);
-    }
+    retRes = retRes && initEmployeeInfoDb(dbOper);
 
     if (retRes)
     {
@@ -221,6 +243,15 @@ bool FpDbProc::getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrL
 //    return dbOper->dbInsertData(strSql,lstStrLstContent);
 //}
 
+bool FpDbProc::initDutyDetailMemDb()
+{
+    return initDutyDetailDb(m_pDbOperMem);
+}
+
+bool FpDbProc::initProcAbnormalDetailMemDb()
+{
+    return initProcAbnormalDetailDb(m_pDbOperMem);
+}
 
 bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
 {
@@ -231,12 +262,35 @@ bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
     return dbOper->dbInsertData(strSql,lstStrLstContent);
 }
 
+bool FpDbProc::setProcAbnormalDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "INSERT INTO proc_abnormal_detail VALUES(?,?,?,?,?,?,?,?,?,?)";
+    return dbOper->dbInsertData(strSql,lstStrLstContent);
+}
+
 bool FpDbProc::updateDutyOverHours()
 {
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
     strSql = "UPDATE duty_detail SET punch_hours = 8.0,charge_hours = 8.0*payroll_multi WHERE punch_hours >8.0 AND payroll_multi IN (2,3)";
+    return dbOper->dbQureyExec(strSql);
+}
+
+bool FpDbProc::updateDutyDetailByProcAbnormalDetail()
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "REPLACE INTO duty_detail "
+            "SELECT a.company,a.area,a.product_line,a.sub_product_line,a.PDU_SPDT,a.job_id, "
+            "            a.name,b.on_duty,b.off_duty,a.collaboration_type,a.ID_number,a.POID, "
+            "            a.timeflag,a.day_of_week,b.punch_type,b.abnormal_hours,b.punch_hours,a.payroll_multi,a.charge_hours "
+            "            FROM duty_detail AS a,proc_abnormal_detail AS b "
+            "WHERE strftime('%Y-%m-%d', a.timeflag)  = strftime('%Y-%m-%d', b.timeflag) AND a.ID_number = b.ID_number";
     return dbOper->dbQureyExec(strSql);
 }
 

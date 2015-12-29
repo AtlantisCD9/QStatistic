@@ -2,6 +2,7 @@
 #define DIALOGIMPORTXLS_H
 
 #include <QDialog>
+#include "globaldef.h"
 
 namespace Ui {
 class DialogImportXls;
@@ -15,13 +16,14 @@ public:
     explicit DialogImportXls(QWidget *parent = 0);
     ~DialogImportXls();
 
-    bool getInfo(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum);
+    bool getInfo(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum, ENUM_IMPORT_XLS_TYPE &type);
     
 private:
     Ui::DialogImportXls *ui;
 
 private slots:
     void onGetOpenFileName();
+    void onRefresh();
 };
 
 #endif // DIALOGIMPORTXLS_H

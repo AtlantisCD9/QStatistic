@@ -186,15 +186,15 @@ bool FpExcelProc::getDataFromExcel(const QString fileName,
 //    return true;
 //}
 
-bool FpExcelProc::prepareExcel(ENUM_XLS_TYPE xlsType, const int sheetNum)
+bool FpExcelProc::prepareExcel(ENUM_EXPORT_XLS_TYPE xlsType, const int sheetNum)
 {
     //load source xls
     QString sourceFileName;
     switch (xlsType)
     {
-    case MONTH_TOTAL:
+    case EX_MONTH_TOTAL:
         sourceFileName = "month_total.xlsx";
-    case MERGE_TOTAL:
+    case EX_MERGE_TOTAL:
         sourceFileName = "merge_total.xlsx";
     default:
         sourceFileName = "month_total.xlsx";
