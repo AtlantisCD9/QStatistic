@@ -34,8 +34,15 @@ public:
     //Mem Db
     //根据异常工时处理内容，刷新工时明细表格
     void updateDutyDetailByProcAbnormalDetail();
+    //根据工时明细，刷新月结汇总表基础信息
+    void updateDutyPersonalSumByDutyDetailMemDb();
+    //刷新月结汇总表的起止时间
+    void updateDutyPersonalSumSetDateInterMemDb(QDate startDate,QDate endDate);
+    //根据PO切换信息刷新月结汇总表的起止时间
+    void updateDutyPersonalSumByPoSwitchMemDb();
 
     void setProcAbnormalDetail();
+    void setPoSwtich();
 
     void setDutyDetail();
     const QList<QVariant> &getDutyDetailTitle(){return m_lstTitleDetail;}
@@ -45,7 +52,7 @@ public:
 
     void getBelateOrLeaveEarlyDetail();
     void getMissPunchInDetail();
-    void getDistinctPersonal();
+    void getDutyPersonalSum();
 
     //void setDutyCollection();
     const QList<QVariant> &getDutyColletionTitle(){return m_lstTitleCollection;}
@@ -54,12 +61,16 @@ public:
 
     void syncWorkDays();
 
+    int getDetailSize(){return m_lstRowLstColumnDetail.size();}
+    int getAbnormalSize(){return m_lstRowLstColumnAbnormal.size();}
+    int getPoSwitchSize(){return m_lstRowLstColumnPOSwitch.size();}
+
+    bool getAndCheckCurMonth(QDate &startDate,QDate &endDate);//example:yyyyMM
+
 private:
     //Loacl Db
     void getWorkDays();
     void createWorkDays();
-
-    bool getAndCheckCurMonth();//example:201510
 
     double getAbnormalHourMID(int secsTemp);
     QDateTime getTimeFlag(QDateTime dtStart);

@@ -63,7 +63,7 @@ bool FpDbProc::initDutyDetailDb(DbOper *argDbOper)
             "    collaboration_type  VCHAR,            "
             "    ID_number           VCHAR Not Null,   "
             "    POID                VCHAR,            "
-            "    timeflag            DATETIME,         "
+            "    timeflag            DATETIME Not Null,"
             "    day_of_week         INT,              "
             "    punch_type          INT,              "
             "    abnormal_hours      DOUBLE,           "
@@ -93,11 +93,58 @@ bool FpDbProc::initProcAbnormalDetailDb(DbOper *argDbOper)
             "    on_duty             DATETIME,         "
             "    off_duty            DATETIME,         "
             "    remark              VCHAR,            "
-            "    timeflag            DATETIME,         "
+            "    timeflag            DATETIME Not Null,"
             "    punch_type          INT,              "
             "    abnormal_hours      DOUBLE,           "
             "    punch_hours         DOUBLE,           "
             "    PRIMARY KEY(ID_number,timeflag)       "
+            ")";
+    retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+    return retRes;
+}
+
+bool FpDbProc::initDutyPersonalSumDb(DbOper *argDbOper)
+{
+    bool retRes = true;
+    QString strSql;
+    DbOper *dbOper = argDbOper;
+
+    strSql = "DROP TABLE IF EXISTS duty_personal_sum";
+    retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+    strSql = "CREATE TABLE duty_personal_sum (         "
+            "    company             VCHAR,            "
+            "    area                VCHAR,            "
+            "    product_line        VCHAR,            "
+            "    POID                VCHAR Not Null,   "
+            "    ID_number           VCHAR Not Null,   "
+            "    name                VCHAR,            "
+            "    start_date          DATETIME,         "
+            "    end_date            DATETIME,         "
+            "    PRIMARY KEY(POID,ID_number)           "
+            ")";
+    retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+    return retRes;
+}
+
+bool FpDbProc::initPoSwitchDb(DbOper *argDbOper)
+{
+    bool retRes = true;
+    QString strSql;
+    DbOper *dbOper = argDbOper;
+
+    strSql = "DROP TABLE IF EXISTS po_switch";
+    retRes  = retRes && dbOper->dbQureyExec(strSql);
+
+    strSql = "CREATE TABLE po_switch (                 "
+            "    new_POID            VCHAR Not Null,   "
+            "    old_POID            VCHAR,            "
+            "    name                VCHAR,            "
+            "    ID_number           VCHAR Not Null,   "
+            "    new_start_date      DATETIME Not Null,"
+            "    PRIMARY KEY(new_POID,ID_number,new_start_date)           "
             ")";
     retRes  = retRes && dbOper->dbQureyExec(strSql);
 
@@ -185,6 +232,10 @@ bool FpDbProc::prepareMemDb()
 
     retRes = retRes && initProcAbnormalDetailDb(dbOper);
 
+    retRes = retRes && initDutyPersonalSumDb(dbOper);
+
+    retRes = retRes && initPoSwitchDb(dbOper);
+
     retRes = retRes && initDaysPayrollMultiDb(dbOper);
 
     retRes = retRes && initEmployeeInfoDb(dbOper);
@@ -223,25 +274,16 @@ bool FpDbProc::prepareLocalDb()
     return retRes;
 }
 
-bool FpDbProc::getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+bool FpDbProc::getDutyPersonalSumFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
 {
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "SELECT DISTINCT company,area,product_line,poid,ID_number,name"
-            " FROM duty_detail WHERE punch_type IN (0,1) "
-            " GROUP BY poid,ID_number ORDER BY poid,name";
+    strSql = "SELECT company,area,product_line,poid,ID_number,name"
+            " FROM duty_personal_sum"
+            " ORDER BY poid,name";
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
-
-//bool FpDbProc::setDutyCollectionIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
-//{
-//    QString strSql;
-//    DbOper *dbOper = m_pDbOperMem;
-
-//    strSql = "INSERT INTO duty_collection VALUES(?,?,?,?,?,?,?)";
-//    return dbOper->dbInsertData(strSql,lstStrLstContent);
-//}
 
 bool FpDbProc::initDutyDetailMemDb()
 {
@@ -251,6 +293,16 @@ bool FpDbProc::initDutyDetailMemDb()
 bool FpDbProc::initProcAbnormalDetailMemDb()
 {
     return initProcAbnormalDetailDb(m_pDbOperMem);
+}
+
+bool FpDbProc::initDutyPersonalSumMemDb()
+{
+    return initDutyPersonalSumDb(m_pDbOperMem);
+}
+
+bool FpDbProc::initPoSwitchMemDb()
+{
+    return initPoSwitchDb(m_pDbOperMem);
 }
 
 bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
@@ -268,6 +320,15 @@ bool FpDbProc::setProcAbnormalDetailIntoMemDb(QList<QList<QVariant> > &lstStrLst
     DbOper *dbOper = m_pDbOperMem;
 
     strSql = "INSERT INTO proc_abnormal_detail VALUES(?,?,?,?,?,?,?,?,?,?)";
+    return dbOper->dbInsertData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::setPoSwitchIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "INSERT INTO po_switch VALUES(?,?,?,?,?)";
     return dbOper->dbInsertData(strSql,lstStrLstContent);
 }
 
@@ -292,6 +353,54 @@ bool FpDbProc::updateDutyDetailByProcAbnormalDetail()
             "            FROM duty_detail AS a,proc_abnormal_detail AS b "
             "WHERE strftime('%Y-%m-%d', a.timeflag)  = strftime('%Y-%m-%d', b.timeflag) AND a.ID_number = b.ID_number";
     return dbOper->dbQureyExec(strSql);
+}
+
+bool FpDbProc::updateDutyPersonalSumByDutyDetailMemDb()
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "INSERT INTO duty_personal_sum "
+            "SELECT DISTINCT company,area,product_line,poid,ID_number,name,'',''"
+            " FROM duty_detail WHERE punch_type IN (0,1) "
+            " GROUP BY poid,ID_number ORDER BY poid,name";
+    return dbOper->dbQureyExec(strSql);
+}
+
+bool FpDbProc::updateDutyPersonalSumSetDateInterMemDb(QDate startDate, QDate endDate)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = QString("UPDATE duty_personal_sum SET start_date = '%1',end_date = '%2'")
+            .arg(startDate.toString("yyyy-MM-dd"))
+            .arg(endDate.toString("yyyy-MM-dd"));
+    return dbOper->dbQureyExec(strSql);
+}
+
+bool FpDbProc::updateDutyPersonalSumByPoSwitchMemDb()
+{
+    bool retRes = true;
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    //set a.end_date = date(b.new_start_date,'-1 day')
+    strSql = "REPLACE INTO duty_personal_sum "
+            "SELECT a.company,a.area,a.product_line,a.POID,a.ID_number,a.name,a.start_date,date(b.new_start_date,'-1 day') AS end_date "
+            "FROM duty_personal_sum AS a,po_switch AS b "
+            " WHERE a.ID_number = b.ID_number AND a.POID = b.old_POID AND b.old_POID != 0 "
+            " AND a.start_date <= date(b.new_start_date,'-1 day') AND a.end_date > date(b.new_start_date,'-1 day') ";
+    retRes = retRes && dbOper->dbQureyExec(strSql);
+
+    //set a.start_date = b.new_start_date
+    strSql = "REPLACE INTO duty_personal_sum "
+            "SELECT a.company,a.area,a.product_line,a.POID,a.ID_number,a.name,date(b.new_start_date) AS start_date,a.end_date "
+            "FROM duty_personal_sum AS a,po_switch AS b "
+            " WHERE a.ID_number = b.ID_number AND a.POID = b.new_POID "
+            " AND a.start_date < b.new_start_date AND a.end_date >= b.new_start_date ";
+    retRes = retRes && dbOper->dbQureyExec(strSql);
+
+    return retRes;
 }
 
 bool FpDbProc::setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
@@ -401,6 +510,20 @@ bool FpDbProc::getDutyOverHoursSumByPOIDIDNumberFromMemDb(QList<QList<QVariant> 
     strSql = QString("SELECT round(sum(punch_hours),2)"
                      " FROM duty_detail"
                      " WHERE POID = '%1' AND ID_number = '%2' AND payroll_multi IN (2,3)").arg(POID).arg(IDNumber);
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
+bool FpDbProc::getDutyPersDateByPoIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                                      const QString &POID, const QString &IDNumber)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = QString("SELECT start_date,end_date"
+                     " FROM duty_personal_sum"
+                     " WHERE POID = '%1' AND ID_number = '%2'")
+            .arg(POID)
+            .arg(IDNumber);
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
 

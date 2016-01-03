@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     fpdataproc.cpp \
     dialogimportxls.cpp \
     dialogmergexls.cpp \
-    dialogexportxls.cpp
+    dialogexportxls.cpp \
+    dialogstatistics.cpp
 
 HEADERS  += mainwindow.h\
             qexcel.h \
@@ -35,9 +36,11 @@ HEADERS  += mainwindow.h\
     globaldef.h \
     dialogimportxls.h \
     dialogmergexls.h \
-    dialogexportxls.h
+    dialogexportxls.h \
+    dialogstatistics.h
 
 FORMS    += mainwindow.ui \
     dialogimportxls.ui \
     dialogmergexls.ui \
-    dialogexportxls.ui
+    dialogexportxls.ui \
+    dialogstatistics.ui

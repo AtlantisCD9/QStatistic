@@ -1,9 +1,13 @@
 #ifndef GLOBALDEF_H
 #define GLOBALDEF_H
 
+#include <QString>
+
 #define DB_NAME ":memory:"
 //#define DB_NAME "myTest.db"
 
+
+const QString FP_VERSION_NUM = "1.0.0.0";
 
 
 enum ENUM_EXPORT_XLS_TYPE

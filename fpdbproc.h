@@ -2,6 +2,7 @@
 #define FPDBPROC_H
 
 #include <QObject>
+#include <QDate>
 
 class DbOper;
 
@@ -22,20 +23,31 @@ public:
     bool initDutyDetailMemDb();
     //初始化异常工时处理表
     bool initProcAbnormalDetailMemDb();
+    //初始化月结汇总表
+    bool initDutyPersonalSumMemDb();
+    //初始化PO切换表
+    bool initPoSwitchMemDb();
 
     //将工时明细导入内存数据库
     bool setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
     //将异常工时处理导入内存数据库
     bool setProcAbnormalDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    //将Po切换信息内存数据库
+    bool setPoSwitchIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+
     //刷新加班工时，超过8小时的，按照8小时计算，同时刷新折现工时
     bool updateDutyOverHours();
     //根据异常工时处理内容，刷新工时明细表格
     bool updateDutyDetailByProcAbnormalDetail();
+    //根据工时明细，刷新月结汇总表基础信息
+    bool updateDutyPersonalSumByDutyDetailMemDb();
+    //刷新月结汇总表的起止时间
+    bool updateDutyPersonalSumSetDateInterMemDb(QDate startDate,QDate endDate);
+    //根据PO切换信息刷新月结汇总表的起止时间
+    bool updateDutyPersonalSumByPoSwitchMemDb();
 
-    //从内存数据库取出个人汇总明细
-    bool getDutyDistinctPersonalFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
-//    bool setDutyCollectionIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
-
+    //从内存数据库取出月结汇总表
+    bool getDutyPersonalSumFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
 
     //设置工作日节假日配置表到内存数据库
     bool setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
@@ -62,6 +74,9 @@ public:
     //由POID和身份证号码，查询公休日和节假日打卡工时汇总
     bool getDutyOverHoursSumByPOIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
                                           const QString &POID, const QString &IDNumber);
+    //从内存数据库根据PO和身份证号码，获取汇总起止时间
+    bool getDutyPersDateByPoIDIDNumberFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                                const QString &POID, const QString &IDNumber);
 
     //查询明细工时信息
     bool getDutyDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
@@ -85,6 +100,10 @@ private:
     bool initDutyDetailDb(DbOper *argDbOper);
     //初始化异常工时处理表
     bool initProcAbnormalDetailDb(DbOper *argDbOper);
+    //初始化月结汇总表
+    bool initDutyPersonalSumDb(DbOper *argDbOper);
+    //初始化PO切换表
+    bool initPoSwitchDb(DbOper *argDbOper);
     //初始化工作日公休日节假日配置表
     bool initDaysPayrollMultiDb(DbOper *argDbOper);
     //初始化员工信息表

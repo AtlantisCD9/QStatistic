@@ -3,6 +3,7 @@
 #include "dialogimportxls.h"
 #include "dialogmergexls.h"
 #include "dialogexportxls.h"
+#include "dialogstatistics.h"
 
 #include "fpdataproc.h"
 #include "globaldef.h"
@@ -13,10 +14,7 @@
 #include <QSqlError>
 #include <QStandardItemModel>
 #include <QStandardItem>
-
-
-const QString FP_VERSION_NUM = "0.1.1.0";
-
+#include <QDate>
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -25,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_importXls(new DialogImportXls),
     m_mergeXls(new DialogMergeXls),
     m_exportXls(new DialogExportXls),
+    m_statistics(new DialogStatistics),
     m_pFpDataProc(new FpDataProc)
 {
     ui->setupUi(this);
@@ -60,6 +59,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_actionExportXls,SIGNAL(triggered()),
             this,SLOT(onExportFile()));
 
+    connect(m_actionStatistics,SIGNAL(triggered()),
+            this,SLOT(onStatistics()));
+
     connect(m_actionAbout,SIGNAL(triggered()),
             this,SLOT(onAbout()));
 
@@ -68,6 +70,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete m_pFpDataProc;
+    delete m_statistics;
     delete m_exportXls;
     delete m_mergeXls;
     delete m_importXls;
@@ -89,6 +92,10 @@ void MainWindow::initialMenuFile()
     m_actionExportXls->setObjectName("m_actionExportXls");
     m_actionExportXls->setText(tr("&Export Xls"));
 
+    m_actionStatistics = new QAction(this);
+    m_actionStatistics->setObjectName("m_actionStatistics");
+    m_actionStatistics->setText(tr("&Statistics"));
+
     m_menuFile = new QMenu(ui->menuBar);
     m_menuFile->setObjectName("m_menuFile");
     m_menuFile->setTitle(tr("&File"));
@@ -96,6 +103,7 @@ void MainWindow::initialMenuFile()
     m_menuFile->addAction(m_actionImportXls);
     m_menuFile->addAction(m_actionMergeXls);
     m_menuFile->addAction(m_actionExportXls);
+    m_menuFile->addAction(m_actionStatistics);
 }
 
 void MainWindow::initialMenuConfig()
@@ -286,45 +294,33 @@ void MainWindow::onImportFile()
         return;
     }
 
+    m_pFpDataProc->initial(import_type);
+    m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,import_type);
+
     switch(import_type)
     {
     case IM_DETAIL:
-        m_pFpDataProc->initial(IM_DETAIL);
-        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_DETAIL);
+//        m_pFpDataProc->initial(IM_DETAIL);
+//        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_DETAIL);
 
         m_pFpDataProc->procDataForDatail();
         m_pFpDataProc->setDutyDetail();
         break;
     case IM_ABNORMAL:
-        m_pFpDataProc->initial(IM_ABNORMAL);
-        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_ABNORMAL);
+//        m_pFpDataProc->initial(IM_ABNORMAL);
+//        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_ABNORMAL);
 
         m_pFpDataProc->procDataAbnormal();
         m_pFpDataProc->setProcAbnormalDetail();
         break;
     case IM_PO_SWITCH:
-        m_pFpDataProc->initial(IM_PO_SWITCH);
-        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_PO_SWITCH);
-        //#Atlantis#
+//        m_pFpDataProc->initial(IM_PO_SWITCH);
+//        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_PO_SWITCH);
+
+        m_pFpDataProc->setPoSwtich();
         break;
     case IM_STATISTICS:
-        m_pFpDataProc->initial(IM_STATISTICS);
-        //刷新数据库，更新异常工时处理信息#Atlantis#
-        m_pFpDataProc->updateDutyDetailByProcAbnormalDetail();
 
-        m_pFpDataProc->getBelateOrLeaveEarlyDetail();
-        m_pFpDataProc->getMissPunchInDetail();
-
-        m_pFpDataProc->getDistinctPersonal();
-        m_pFpDataProc->procDataForCollection();
-
-        showDetail(ui->tableView_detail);
-        showDetailBelateOrLeaveEarly(ui->tableView_beLateOrLeaveEarly);
-        showDetailMissPunchIn(ui->tableView_missPunchIn);
-        showCollection(ui->tableView_monthCollect);
-
-        m_actionExportXls->setEnabled(true);
-        m_actionImportXls->setDisabled(true);
         break;
     default:
         break;
@@ -379,6 +375,57 @@ void MainWindow::onExportFile()
 
     m_pFpDataProc->setDataIntoExcel(outPutFile,sheetID);
 
+}
+
+void MainWindow::onStatistics()
+{
+    QDate startDate;
+    QDate endDate;
+
+    m_statistics->setInfo(m_pFpDataProc->getDetailSize(),
+                          m_pFpDataProc->getAbnormalSize(),
+                          m_pFpDataProc->getPoSwitchSize());
+
+    if(!m_pFpDataProc->getAndCheckCurMonth(startDate,endDate))
+    {
+        QMessageBox::information(this,"提示","获取工时明细的日期段出错，请先导入工时明细数据");
+        return;
+    }
+
+    m_statistics->setDate(startDate,endDate);
+
+
+    if(!m_statistics->exec())
+    {
+        return;
+    }
+
+
+    if(!m_statistics->getInfo(startDate,endDate))
+    {
+        return;
+    }
+
+    m_pFpDataProc->initial(IM_STATISTICS);
+    m_pFpDataProc->updateDutyDetailByProcAbnormalDetail();
+
+    m_pFpDataProc->getBelateOrLeaveEarlyDetail();
+    m_pFpDataProc->getMissPunchInDetail();
+
+    m_pFpDataProc->updateDutyPersonalSumByDutyDetailMemDb();
+    m_pFpDataProc->updateDutyPersonalSumSetDateInterMemDb(startDate,endDate);
+    m_pFpDataProc->updateDutyPersonalSumByPoSwitchMemDb();
+
+    m_pFpDataProc->getDutyPersonalSum();
+    m_pFpDataProc->procDataForCollection();
+
+    showDetail(ui->tableView_detail);
+    showDetailBelateOrLeaveEarly(ui->tableView_beLateOrLeaveEarly);
+    showDetailMissPunchIn(ui->tableView_missPunchIn);
+    showCollection(ui->tableView_monthCollect);
+
+    m_actionExportXls->setEnabled(true);
+    m_actionImportXls->setDisabled(true);
 }
 
 

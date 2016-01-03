@@ -13,6 +13,7 @@ class MainWindow;
 class DialogImportXls;
 class DialogMergeXls;
 class DialogExportXls;
+class DialogStatistics;
 
 class MainWindow : public QMainWindow
 {
@@ -27,10 +28,12 @@ private:
     DialogImportXls *m_importXls;
     DialogMergeXls *m_mergeXls;
     DialogExportXls *m_exportXls;
+    DialogStatistics *m_statistics;
 
     QAction *m_actionImportXls;
     QAction *m_actionMergeXls;
     QAction *m_actionExportXls;
+    QAction *m_actionStatistics;
     QMenu *m_menuFile;
 
     QAction *m_actionWorkDaysSetting;
@@ -56,6 +59,7 @@ private slots:
     void onImportFile();
     void onMergeFile();
     void onExportFile();
+    void onStatistics();
 
     void onAbout();
 

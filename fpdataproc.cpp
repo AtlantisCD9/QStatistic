@@ -47,13 +47,16 @@ void FpDataProc::initial(ENUM_IMPORT_XLS_TYPE importType)
     case IM_PO_SWITCH:
         m_lstTitlePOSwitch.clear();//明细抬头
         m_lstRowLstColumnPOSwitch.clear();//will be add some proc data
-        //#Atlantis#
+        m_pFpDbProc->initPoSwitchMemDb();
         break;
-    default:
+    case IM_STATISTICS:
         m_lstTitleCollection.clear();//汇总抬头
         m_lstRowLstColumnBelateOrLeaveEarlyDetail.clear();//will be add some proc data
         m_lstRowLstColumnMissPunchInDetail.clear();//will be add some proc data
         m_lstRowLstColumnCollection.clear();//for month collection will be add some proc data
+        m_pFpDbProc->initDutyPersonalSumMemDb();
+        break;
+    default:
         break;
     }
 
@@ -286,7 +289,9 @@ void FpDataProc::procDataAbnormal()
 void FpDataProc::procDataForCollection()
 {
     //检查是否处于某个月
-    if (!getAndCheckCurMonth())
+    QDate startTemp;
+    QDate endTemp;
+    if (!getAndCheckCurMonth(startTemp,endTemp))
     {
         return;
     }
@@ -307,14 +312,11 @@ void FpDataProc::procDataForCollection()
     m_lstTitleCollection << tr("欠工时");//9
     m_lstTitleCollection << tr("加班工时");//10
 
-    int workDaysNum = 0;//本月工作日
-    foreach(QList<QVariant> workDay,lstStrLstContent)
-    {
-        if (1 == workDay[1].toInt())
-        {
-            ++workDaysNum;
-        }
-    }
+    const int POID_ID = 3;
+    const int ID_number_ID = 4;
+
+    QDate startDate;
+    QDate endDate;
 
     //处理异常工时——取整数
     const int abnormalHourID = 6;
@@ -370,8 +372,19 @@ void FpDataProc::procDataForCollection()
 
         //引用一行的lst，编辑数据
         QList<QVariant> &lstColumnCollection = m_lstRowLstColumnCollection[i];
-        const QString POID = lstColumnCollection[3].toString();
-        const QString ID_number = lstColumnCollection[4].toString();
+        const QString POID = lstColumnCollection[POID_ID].toString();
+        const QString ID_number = lstColumnCollection[ID_number_ID].toString();
+
+        //月结汇总项目起止时间
+        QList<QList<QVariant> > lstStrLstContentDate;
+        //start_date,end_date
+        m_pFpDbProc->getDutyPersDateByPoIDIDNumberFromMemDb(lstStrLstContentDate,
+                                                            POID,ID_number);
+        if (lstStrLstContentDate.size() > 0)
+        {
+            startDate = lstStrLstContentDate.first()[0].toDate();
+            endDate = lstStrLstContentDate.first()[1].toDate();
+        }
 
         //异常工时
         QList<QList<QVariant> > lstStrLstContentDutyAbnormal;
@@ -415,8 +428,10 @@ void FpDataProc::procDataForCollection()
         {
             if (!lstDatePunchIn.contains(workDay[0].toDate()))
             {
-                //如果是工作日，但是没有记录，那么需要加入异常工时
-                if (1 == workDay[1].toInt())
+                //如果是工作日，但是没有记录，那么需要加入异常工时#Atlantis#
+                if (1 == workDay[1].toInt()
+                        && workDay[0].toDate() >= startDate
+                        && workDay[0].toDate() <= endDate)
                 {
                     double abnormalHour = lstColumnCollection[abnormalHourID].toDouble();
                     abnormalHour += 8.0;
@@ -427,6 +442,16 @@ void FpDataProc::procDataForCollection()
 
         //应服务工时
         //此处，应服务工时需要结合出项入项数据#Atlantis#
+        int workDaysNum = 0;//本月工作日
+        foreach(QList<QVariant> workDay,lstStrLstContent)
+        {
+            if (1 == workDay[1].toInt()
+                    && workDay[0].toDate() >= startDate
+                    && workDay[0].toDate() <= endDate)
+            {
+                ++workDaysNum;
+            }
+        }
         lstColumnCollection << QVariant(workDaysNum*8-lstColumnCollection[abnormalHourID].toDouble());
         double needPunchInHours = lstColumnCollection[needPunchInHourID].toDouble();
 //        qDebug() << lstColumnCollection[5];
@@ -542,8 +567,14 @@ void FpDataProc::procDataForCollection()
             else
             {
                 //此处，应服务工时需要结合出项入项数据#Atlantis#
-                //lstColumnCollection << 0;
-                lstColumnCollection << 0;
+                if (workDay[0].toDate() >= startDate && workDay[0].toDate() <= endDate)
+                {
+                    lstColumnCollection << 0;
+                }
+                else
+                {
+                    lstColumnCollection << QVariant();
+                }
             }
         }
         //qDebug() << lstColumnCollection;
@@ -719,14 +750,14 @@ void FpDataProc::getMissPunchInDetail()
     m_pFpDbProc->getDutyDetailMissPunchInFromMemDb(m_lstRowLstColumnMissPunchInDetail);
 }
 
-void FpDataProc::getDistinctPersonal()
+void FpDataProc::getDutyPersonalSum()
 {
     if (!m_pFpDbProc->prepareMemDb())
     {
         qDebug() << "Db Open Failed";
         return;
     }
-    m_pFpDbProc->getDutyDistinctPersonalFromMemDb(m_lstRowLstColumnCollection);
+    m_pFpDbProc->getDutyPersonalSumFromMemDb(m_lstRowLstColumnCollection);
     //poid,job_id,name,SUM(punch_hours)
     m_lstTitleCollection << tr("公司");
     m_lstTitleCollection << tr("区域");
@@ -756,6 +787,21 @@ void FpDataProc::updateDutyDetailByProcAbnormalDetail()
     m_pFpDbProc->updateDutyDetailByProcAbnormalDetail();
 }
 
+void FpDataProc::updateDutyPersonalSumByDutyDetailMemDb()
+{
+    m_pFpDbProc->updateDutyPersonalSumByDutyDetailMemDb();
+}
+
+void FpDataProc::updateDutyPersonalSumSetDateInterMemDb(QDate startDate, QDate endDate)
+{
+    m_pFpDbProc->updateDutyPersonalSumSetDateInterMemDb(startDate,endDate);
+}
+
+void FpDataProc::updateDutyPersonalSumByPoSwitchMemDb()
+{
+    m_pFpDbProc->updateDutyPersonalSumByPoSwitchMemDb();
+}
+
 void FpDataProc::setProcAbnormalDetail()
 {
     if (0 == m_lstRowLstColumnAbnormal.size())
@@ -769,6 +815,21 @@ void FpDataProc::setProcAbnormalDetail()
         return;
     }
     m_pFpDbProc->setProcAbnormalDetailIntoMemDb(m_lstRowLstColumnAbnormal);
+}
+
+void FpDataProc::setPoSwtich()
+{
+    if (0 == m_lstRowLstColumnPOSwitch.size())
+    {
+        return;
+    }
+
+    if (!m_pFpDbProc->prepareMemDb())
+    {
+        qDebug() << "Db Open Failed";
+        return;
+    }
+    m_pFpDbProc->setPoSwitchIntoMemDb(m_lstRowLstColumnPOSwitch);
 }
 
 void FpDataProc::setDutyDetail()
@@ -808,7 +869,7 @@ const QString &FpDataProc::getDutyDetailMissPunchInSQL()
 //}
 
 
-bool FpDataProc::getAndCheckCurMonth()
+bool FpDataProc::getAndCheckCurMonth(QDate &startDate, QDate &endDate)
 {
     QList<QList<QVariant> > lstStrLstContent;
     if (!m_pFpDbProc->getMinMaxMonthFromMemDb(lstStrLstContent))
@@ -825,6 +886,8 @@ bool FpDataProc::getAndCheckCurMonth()
             == lstStrLstContent[0][1].toDate().toString("yyyyMM"))
     {
         m_strDateMonth = lstStrLstContent[0][0].toDate().toString("yyyyMM");
+        startDate = lstStrLstContent[0][0].toDate();
+        endDate = lstStrLstContent[0][1].toDate();
         //qDebug() << m_strDateMonth;
         return true;
     }
