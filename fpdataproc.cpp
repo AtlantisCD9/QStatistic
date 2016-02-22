@@ -64,7 +64,7 @@ void FpDataProc::initial(ENUM_IMPORT_XLS_TYPE importType)
 
 }
 
-double FpDataProc::getAbnormalHourMID(int secsTemp)
+double FpDataProc::getAbnormalHourUnit(int secsTemp)
 {
     if (secsTemp < 0)
     {
@@ -144,8 +144,8 @@ double FpDataProc::getAbnormalHourFNL(QDateTime dtTimeFlag, QDateTime dtStart, Q
     {
         if (1 == payrollMulti)
         {
-            int secsTemp = 8*3600-getAbnormalHours(dtTimeFlag,dtStart,dtEnd);
-            abnormalHour = getAbnormalHourMID(secsTemp);
+            int secsTemp = getAbnormalHours(dtTimeFlag,dtStart,dtEnd);
+            abnormalHour = getAbnormalHourUnit(secsTemp);
         }
         else
         {
@@ -914,7 +914,7 @@ int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateT
     }
 
     int tmpEnd = 0;
-    if (QDateTime(dtTimeFlag.date(),QTime(19,0)).secsTo(dtEnd) > 0)
+    /*if (QDateTime(dtTimeFlag.date(),QTime(19,0)).secsTo(dtEnd) > 0)
     {
         dtEnd = QDateTime(dtTimeFlag.date(),QTime(19,0));
     }
@@ -923,7 +923,7 @@ int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateT
         tmpEnd = QDateTime(dtTimeFlag.date(),QTime(18,0)).secsTo(dtEnd);
         dtEnd = QDateTime(dtTimeFlag.date(),QTime(17,30));
     }
-    else if (QDateTime(dtTimeFlag.date(),QTime(17,30)).secsTo(dtEnd) > 0)
+    else */if (QDateTime(dtTimeFlag.date(),QTime(17,30)).secsTo(dtEnd) > 0)
     {
         dtEnd = QDateTime(dtTimeFlag.date(),QTime(17,30));
     }
@@ -934,7 +934,7 @@ int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateT
     }
     else if (QDateTime(dtTimeFlag.date(),QTime(12,0)).secsTo(dtEnd) > 0)
     {
-        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,00));
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,0));
     }
 
     int tempStartEnd = dtStart.secsTo(dtEnd);
@@ -943,7 +943,7 @@ int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateT
         tempStartEnd = 0;
     }
 
-    return (tempStartEnd + tmpStart + tmpEnd);
+    return (8*3600-(tempStartEnd + tmpStart + tmpEnd));
 
 
 //    qDebug() << dtStart;
@@ -990,7 +990,7 @@ int FpDataProc::getPunchInHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateTi
     }
     else if (QDateTime(dtTimeFlag.date(),QTime(12,0)).secsTo(dtEnd) > 0)
     {
-        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,00));
+        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,0));
     }
 
     int tempStartEnd = dtStart.secsTo(dtEnd);
@@ -1034,7 +1034,7 @@ int FpDataProc::getOverTimeHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateT
 //    }
 //    else if (QDateTime(dtTimeFlag.date(),QTime(12,0)).secsTo(dtEnd) > 0)
 //    {
-//        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,00));
+//        dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,0));
 //    }
 
     int tempStartEnd = dtStart.secsTo(dtEnd);

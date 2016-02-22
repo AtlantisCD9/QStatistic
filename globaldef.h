@@ -7,7 +7,7 @@
 //#define DB_NAME "myTest.db"
 
 
-const QString FP_VERSION_NUM = "1.0.0.0";
+const QString FP_VERSION_NUM = "1.0.0.1";
 
 
 enum ENUM_EXPORT_XLS_TYPE

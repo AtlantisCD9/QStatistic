@@ -72,7 +72,7 @@ private:
     void getWorkDays();
     void createWorkDays();
 
-    double getAbnormalHourMID(int secsTemp);
+    double getAbnormalHourUnit(int secsTemp);
     QDateTime getTimeFlag(QDateTime dtStart);
     int getPunchType(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd);
     double getAbnormalHourFNL(QDateTime dtTimeFlag,QDateTime dtStart,QDateTime dtEnd,int punchType,int payrollMulti);
