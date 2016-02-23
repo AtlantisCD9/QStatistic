@@ -898,20 +898,25 @@ bool FpDataProc::getAndCheckCurMonth(QDate &startDate, QDate &endDate)
 
 int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateTime dtEnd)
 {
+    //这里对8:00~12:00 13:30~17:30为有效时间进行计算工时，最后再用8小时去减得到异常工时
     int tmpStart = 0;
     if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(8,0))) > 0)
     {
+        //如果dtStart早于8点，那么就以8点开始算
         dtStart = QDateTime(dtTimeFlag.date(),QTime(8,0));
     }
     else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0))) > 0)
     {
+        //如果dtStart晚于8点，但早于12点，那么dtStart到12点的时间计入tmpStart，并以13:30再计如dtStart
         tmpStart = dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0)));
         dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
     }
     else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(13,30))) > 0)
     {
+        //如果dtStart晚于12点，但早于13:30，那么就以13:30开始算
         dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
     }
+    //如果dtStart以上条件都不满足，那么dtStart一定是13:30以后了，那么就不需要处理
 
     int tmpEnd = 0;
     /*if (QDateTime(dtTimeFlag.date(),QTime(19,0)).secsTo(dtEnd) > 0)
@@ -925,21 +930,26 @@ int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateT
     }
     else */if (QDateTime(dtTimeFlag.date(),QTime(17,30)).secsTo(dtEnd) > 0)
     {
+        //如果dtEnd晚于17:30，那么就按照17:30算
         dtEnd = QDateTime(dtTimeFlag.date(),QTime(17,30));
     }
     else if (QDateTime(dtTimeFlag.date(),QTime(13,30)).secsTo(dtEnd) > 0)
     {
+        //如果dtEnd早于17:30，但是晚于13:30，那么13:30到dtEnd的时间计入tmpEnd，并以12点再计入dtEnd
         tmpEnd = QDateTime(dtTimeFlag.date(),QTime(13,30)).secsTo(dtEnd);
         dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,0));
     }
     else if (QDateTime(dtTimeFlag.date(),QTime(12,0)).secsTo(dtEnd) > 0)
     {
+        //如果dtEnd早于12点，那么就按照12点算
         dtEnd = QDateTime(dtTimeFlag.date(),QTime(12,0));
     }
+    //如果dtEnd以上条件都不满足，那么dtEnd一定是12点以前了，那么就不需要处理
 
     int tempStartEnd = dtStart.secsTo(dtEnd);
     if (tempStartEnd < 0)
     {
+        //上面的算法可能导致dtEnd早于dtStart，如果dtEnd早于dtStart，则时间都被算在tmpStart和tmpEnd中了，tempStartEnd设置为0即可
         tempStartEnd = 0;
     }
 
@@ -958,6 +968,7 @@ int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateT
 
 int FpDataProc::getPunchInHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateTime dtEnd)
 {
+    //算法注释同getAbnormalHours
     int tmpStart = 0;
 /*    if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(8,0))) > 0)
     {
