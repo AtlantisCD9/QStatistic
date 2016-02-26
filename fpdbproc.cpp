@@ -97,6 +97,7 @@ bool FpDbProc::initProcAbnormalDetailDb(DbOper *argDbOper)
             "    punch_type          INT,              "
             "    abnormal_hours      DOUBLE,           "
             "    punch_hours         DOUBLE,           "
+            "    payroll_multi       INT,              "
             "    PRIMARY KEY(ID_number,timeflag)       "
             ")";
     retRes  = retRes && dbOper->dbQureyExec(strSql);
@@ -319,7 +320,7 @@ bool FpDbProc::setProcAbnormalDetailIntoMemDb(QList<QList<QVariant> > &lstStrLst
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
-    strSql = "INSERT INTO proc_abnormal_detail VALUES(?,?,?,?,?,?,?,?,?,?)";
+    strSql = "INSERT INTO proc_abnormal_detail VALUES(?,?,?,?,?,?,?,?,?,?,?)";
     return dbOper->dbInsertData(strSql,lstStrLstContent);
 }
 
@@ -341,6 +342,30 @@ bool FpDbProc::updateDutyOverHours()
     return dbOper->dbQureyExec(strSql);
 }
 
+bool FpDbProc::getBaseInfoInProcAbnormalDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = "SELECT DISTINCT a.company,a.area,a.product_line,a.sub_product_line,a.PDU_SPDT,a.job_id, "
+                " a.name,'--','--',a.collaboration_type,a.ID_number,a.POID, "
+                " '#TIMEFLAG#',-1,-1,0,0,0,0 "
+            " FROM duty_detail AS a,proc_abnormal_detail AS b "
+            " WHERE a.ID_number = b.ID_number";
+    return dbOper->dbQureyData(strSql,lstStrLstContent);//ID of timeflag=12
+}
+
+bool FpDbProc::getTimeFlagNotInDetailInProcAbnormalDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent, const QString &IDNumber)
+{
+    QString strSql;
+    DbOper *dbOper = m_pDbOperMem;
+
+    strSql = QString("SELECT strftime('%Y-%m-%d', timeflag) FROM proc_abnormal_detail "
+                     " WHERE strftime('%Y-%m-%d', timeflag) NOT IN (SELECT strftime('%Y-%m-%d', timeflag) FROM duty_detail WHERE id_number = '%1') "
+                     " AND id_number = '%1'").arg(IDNumber);
+    return dbOper->dbQureyData(strSql,lstStrLstContent);
+}
+
 bool FpDbProc::updateDutyDetailByProcAbnormalDetail()
 {
     QString strSql;
@@ -349,7 +374,7 @@ bool FpDbProc::updateDutyDetailByProcAbnormalDetail()
     strSql = "REPLACE INTO duty_detail "
             "SELECT a.company,a.area,a.product_line,a.sub_product_line,a.PDU_SPDT,a.job_id, "
             "            a.name,b.on_duty,b.off_duty,a.collaboration_type,a.ID_number,a.POID, "
-            "            a.timeflag,a.day_of_week,b.punch_type,b.abnormal_hours,b.punch_hours,a.payroll_multi,a.charge_hours "
+            "            a.timeflag,a.day_of_week,b.punch_type,b.abnormal_hours,b.punch_hours,b.payroll_multi,a.charge_hours "
             "            FROM duty_detail AS a,proc_abnormal_detail AS b "
             "WHERE strftime('%Y-%m-%d', a.timeflag)  = strftime('%Y-%m-%d', b.timeflag) AND a.ID_number = b.ID_number";
     return dbOper->dbQureyExec(strSql);

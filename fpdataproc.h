@@ -32,6 +32,8 @@ public:
     //Loacl Db
 
     //Mem Db
+    //在刷新异常工时处理表到明细工时之前，补齐明细工时中不存在的工时
+    void addInfoIntoDutyDetailByProcAbnormalDetail();
     //根据异常工时处理内容，刷新工时明细表格
     void updateDutyDetailByProcAbnormalDetail();
     //根据工时明细，刷新月结汇总表基础信息

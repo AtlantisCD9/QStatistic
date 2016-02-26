@@ -24,6 +24,7 @@ public:
 
 
 //    bool getExcelSaveFile(QString &fileName);
+    bool protectSourceFile(const QString outPutFile);
     bool prepareExcel(ENUM_EXPORT_XLS_TYPE xlsType,const int sheetNum=3);
     bool setDataIntoExcel(QList<QVariant> &lstTitle, QList<QList<QVariant> > &lstLstContent,
                           const int titleEndID=1,const int sheetID=1);

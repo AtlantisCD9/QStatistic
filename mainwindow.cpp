@@ -138,7 +138,7 @@ void MainWindow::onAbout()
 {
     QMessageBox::about(this,
                        tr("About Application"),
-                       QString(tr("FP Statistic Tool\nVersion %1").arg(FP_VERSION_NUM)));
+                       QString(tr("FP Statistic Tool\nVersion %1\n%2").arg(FP_VERSION_NUM).arg(FP_VERSION_INFO)));
 }
 
 void MainWindow::showDetail(QTableView *tableWidget)
@@ -406,18 +406,19 @@ void MainWindow::onStatistics()
         return;
     }
 
-    m_pFpDataProc->initial(IM_STATISTICS);
-    m_pFpDataProc->updateDutyDetailByProcAbnormalDetail();
+    m_pFpDataProc->initial(IM_STATISTICS);//清除内存数据
+    m_pFpDataProc->addInfoIntoDutyDetailByProcAbnormalDetail();//在刷新异常工时处理表到明细工时之前，补齐明细工时中不存在的工时
+    m_pFpDataProc->updateDutyDetailByProcAbnormalDetail();//刷新异常工时处理表到明细工时
 
-    m_pFpDataProc->getBelateOrLeaveEarlyDetail();
-    m_pFpDataProc->getMissPunchInDetail();
+    m_pFpDataProc->getBelateOrLeaveEarlyDetail();//从数据库中取出明细记录工作日迟到早退到内存
+    m_pFpDataProc->getMissPunchInDetail();//从数据库中取出明细记录工作日打卡异常到内存
 
-    m_pFpDataProc->updateDutyPersonalSumByDutyDetailMemDb();
-    m_pFpDataProc->updateDutyPersonalSumSetDateInterMemDb(startDate,endDate);
-    m_pFpDataProc->updateDutyPersonalSumByPoSwitchMemDb();
+    m_pFpDataProc->updateDutyPersonalSumByDutyDetailMemDb();//在数据库中，把明细记录的非异常工时信息汇总导入到个人明细汇总表
+    m_pFpDataProc->updateDutyPersonalSumSetDateInterMemDb(startDate,endDate);//在数据库中，根据入参数据，刷新个人明细汇总表中的数据起止日期
+    m_pFpDataProc->updateDutyPersonalSumByPoSwitchMemDb();//在数据库中，根据PO切换表，刷新个人明细汇总表中的数据起止日期
 
-    m_pFpDataProc->getDutyPersonalSum();
-    m_pFpDataProc->procDataForCollection();
+    m_pFpDataProc->getDutyPersonalSum();//在数据库中，提取个人明细汇总表的key数据到内存，以此作为汇总数据的处理依据
+    m_pFpDataProc->procDataForCollection();//在数据库中，根据key数据在明细表中检索数据到内存
 
     showDetail(ui->tableView_detail);
     showDetailBelateOrLeaveEarly(ui->tableView_beLateOrLeaveEarly);

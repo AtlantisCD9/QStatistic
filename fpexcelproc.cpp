@@ -186,6 +186,31 @@ bool FpExcelProc::getDataFromExcel(const QString fileName,
 //    return true;
 //}
 
+bool FpExcelProc::protectSourceFile(const QString outPutFile)
+{
+    //load source xls
+    QStringList lstSourceFileName;
+    lstSourceFileName << "month_total.xlsx";
+    lstSourceFileName << "merge_total.xlsx";
+
+    foreach (QString sourceFileName,lstSourceFileName)
+    {
+        sourceFileName = QDir::currentPath()+"/xlsSource/"+sourceFileName;
+        sourceFileName = QDir::toNativeSeparators(QDir::cleanPath(sourceFileName));
+
+//        qDebug() << sourceFileName;
+//        qDebug() << QDir::toNativeSeparators(QDir::cleanPath(outPutFile));
+
+        if (QDir::toNativeSeparators(QDir::cleanPath(outPutFile)) == sourceFileName)
+        {
+            QMessageBox::critical(0,"Error",QString("Can Not Select The Base Excel To Save:%1\nPlease Set Another File Name").arg(sourceFileName));
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool FpExcelProc::prepareExcel(ENUM_EXPORT_XLS_TYPE xlsType, const int sheetNum)
 {
     //load source xls
@@ -200,7 +225,7 @@ bool FpExcelProc::prepareExcel(ENUM_EXPORT_XLS_TYPE xlsType, const int sheetNum)
         sourceFileName = "month_total.xlsx";
     }
 
-    sourceFileName = QDir::currentPath()+"./xlsSource/"+sourceFileName;
+    sourceFileName = QDir::currentPath()+"/xlsSource/"+sourceFileName;
     sourceFileName = QDir::toNativeSeparators(QDir::cleanPath(sourceFileName));
 
     if (!QFile::exists(sourceFileName))

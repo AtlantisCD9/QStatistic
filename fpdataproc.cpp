@@ -282,6 +282,9 @@ void FpDataProc::procDataAbnormal()
         //punch_hours
         m_lstRowLstColumnAbnormal[i] << QVariant(getPunchHour(dtTimeFlag,dtStart,dtEnd,
                                                             mapDate2Type[dtTimeFlag.date()]));
+
+        //payroll_multi
+        m_lstRowLstColumnAbnormal[i] << QVariant(mapDate2Type[dtTimeFlag.date()]);
     }
 
 }
@@ -295,16 +298,7 @@ void FpDataProc::procDataForCollection()
     {
         return;
     }
-
-    //如果是某个月，那么获取该月份的日历表
-    QList<QList<QVariant> > lstStrLstContent;
-    m_pFpDbProc->getWorkDaysByCurMonthFromMemDb(lstStrLstContent,m_strDateMonth);
-
-    QMap<QDate,int> mapDate2Type;
-    foreach(QList<QVariant> workDay,lstStrLstContent)
-    {
-        mapDate2Type[workDay[0].toDate()] = workDay[1].toInt();
-    }
+    //若成功，则赋值到m_strDateMonth
 
     m_lstTitleCollection << tr("异常工时");//6
     m_lstTitleCollection << tr("实际打卡工时");//7
@@ -327,7 +321,6 @@ void FpDataProc::procDataForCollection()
     //const int overHourID = 10;
 
 
-
     //初始化dayOfWeek到文字描述映射
     QMap<int,QString> mapInt2Descrp;
     mapInt2Descrp[1] = tr("周一");//Monday
@@ -337,6 +330,18 @@ void FpDataProc::procDataForCollection()
     mapInt2Descrp[5] = tr("周五");
     mapInt2Descrp[6] = tr("周六");
     mapInt2Descrp[7] = tr("周日");//Sunday
+
+
+    //如果是某个月，那么获取该月份的日历表
+    QList<QList<QVariant> > lstStrLstContent;
+    m_pFpDbProc->getWorkDaysByCurMonthFromMemDb(lstStrLstContent,m_strDateMonth);
+
+    //获取日期到工班类型的映射
+    QMap<QDate,int> mapDate2Type;
+    foreach(QList<QVariant> workDay,lstStrLstContent)
+    {
+        mapDate2Type[workDay[0].toDate()] = workDay[1].toInt();
+    }
 
     foreach(QList<QVariant> workDay,lstStrLstContent)
     {
@@ -361,6 +366,7 @@ void FpDataProc::procDataForCollection()
     }
     //qDebug() << m_lstTitleCollection;
 
+    //汇总表明细，key数据
     const int maxRows = m_lstRowLstColumnCollection.size();
 
     for(int i=0; i<maxRows; ++i)
@@ -611,6 +617,11 @@ void FpDataProc::mergeExcel(QStringList &lstMergeFile, QString &outPutFile, int 
     QList<QVariant> lstTitleDetail;//明细抬头
     QList<QList<QVariant> > lstRowLstColumnDetail;//will be add some proc data
 
+    if (!m_pFpExcelProc->protectSourceFile(outPutFile))
+    {
+        return;
+    }
+
 //    QStringList lstFileName;
 //    if(!m_pFpExcelProc->getExcelOpenFileList(lstFileName))
 //    {
@@ -648,6 +659,11 @@ void FpDataProc::mergeExcel(QStringList &lstMergeFile, QString &outPutFile, int 
 
 void FpDataProc::setDataIntoExcel(QString &outPutFile, int &sheetID)
 {
+    if (!m_pFpExcelProc->protectSourceFile(outPutFile))
+    {
+        return;
+    }
+
     if (!m_pFpExcelProc->prepareExcel(EX_MONTH_TOTAL,sheetID+2))
     {
         return;
@@ -781,6 +797,34 @@ void FpDataProc::getDutyPersonalSum()
 //    }
 //    m_pFpDbProc->setDutyCollectionIntoMemDb(m_lstRowLstColumnCollection);
 //}
+
+void FpDataProc::addInfoIntoDutyDetailByProcAbnormalDetail()
+{
+    const int timeflagID = 12;
+    QList<QList<QVariant> > lstStrLstDutyDetail;
+
+    QList<QList<QVariant> > lstStrLstContent;
+//    strSql = "SELECT DISTINCT a.company,a.area,a.product_line,a.sub_product_line,a.PDU_SPDT,a.job_id, "
+//                " a.name,'--','--',a.collaboration_type,a.ID_number,a.POID, "
+//                " '#TIMEFLAG#',-1,-1,0,0,0,0 "
+//            " FROM duty_detail AS a,proc_abnormal_detail AS b "
+//            " WHERE a.ID_number = b.ID_number";
+    m_pFpDbProc->getBaseInfoInProcAbnormalDetailFromMemDb(lstStrLstContent);
+
+    foreach (QList<QVariant> lstContent,lstStrLstContent)
+    {
+        QList<QList<QVariant> > lstStrLstTimeflag;
+        m_pFpDbProc->getTimeFlagNotInDetailInProcAbnormalDetailFromMemDb(lstStrLstTimeflag,lstContent[timeflagID-2].toString());
+        foreach (QList<QVariant> lstTimeflag,lstStrLstTimeflag)
+        {
+            lstContent[timeflagID] = lstTimeflag[0];
+            lstContent[timeflagID+1] = lstTimeflag[0].toDate().dayOfWeek();
+            lstStrLstDutyDetail << lstContent;
+        }
+    }
+
+    m_pFpDbProc->setDutyDetailIntoMemDb(lstStrLstDutyDetail);
+}
 
 void FpDataProc::updateDutyDetailByProcAbnormalDetail()
 {

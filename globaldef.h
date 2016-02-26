@@ -7,7 +7,8 @@
 //#define DB_NAME "myTest.db"
 
 
-const QString FP_VERSION_NUM = "1.0.0.1";
+#define FP_VERSION_NUM "1.0.0.2"
+#define FP_VERSION_INFO "1、添加版本信息\n2、添加模板表保护\n3、添加支持“外出公干场景”，即对未打卡工作日，异常工时处理表有效"
 
 
 enum ENUM_EXPORT_XLS_TYPE

@@ -44,3 +44,5 @@ FORMS    += mainwindow.ui \
     dialogmergexls.ui \
     dialogexportxls.ui \
     dialogstatistics.ui
+
+RC_FILE = fpStatistic.rc

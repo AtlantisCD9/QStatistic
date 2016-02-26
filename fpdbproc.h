@@ -37,6 +37,11 @@ public:
 
     //刷新加班工时，超过8小时的，按照8小时计算，同时刷新折现工时
     bool updateDutyOverHours();
+    //结合明细表和异常工时处理表，获取异常工时处理人员工班信息
+    bool getBaseInfoInProcAbnormalDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    //由身份证号码，获取异常工时处理表中不再明细表的工班标识
+    bool getTimeFlagNotInDetailInProcAbnormalDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent,
+                                                             const QString &IDNumber);
     //根据异常工时处理内容，刷新工时明细表格
     bool updateDutyDetailByProcAbnormalDetail();
     //根据工时明细，刷新月结汇总表基础信息
