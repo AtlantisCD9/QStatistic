@@ -83,9 +83,14 @@ double FpDataProc::getAbnormalHourUnit(int secsTemp)
     {
         dAbnormalHour = ihead+1;
     }
-    else
+    else if (itail > 0)
     {
         dAbnormalHour = ihead+0.5;
+    }
+    else
+    {
+        //修复当整小时数时，仍热加0.5的错误
+        dAbnormalHour = ihead;
     }
 
     return dAbnormalHour;

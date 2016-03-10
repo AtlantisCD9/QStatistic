@@ -7,8 +7,8 @@
 //#define DB_NAME "myTest.db"
 
 
-#define FP_VERSION_NUM "1.0.0.2"
-#define FP_VERSION_INFO "1、添加版本信息\n2、添加模板表保护\n3、添加支持“外出公干场景”，即对未打卡工作日，异常工时处理表有效"
+#define FP_VERSION_NUM "1.0.0.3"
+#define FP_VERSION_INFO "1、修复异常工时计算方法中，当整小时数时，仍然加0.5的错误"
 
 
 enum ENUM_EXPORT_XLS_TYPE
