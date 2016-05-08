@@ -7,8 +7,8 @@
 //#define DB_NAME "myTest.db"
 
 
-#define FP_VERSION_NUM "1.0.0.3"
-#define FP_VERSION_INFO "1、修复异常工时计算方法中，当整小时数时，仍然加0.5的错误"
+#define FP_VERSION_NUM "1.0.0.5"
+#define FP_VERSION_INFO "1、修复“外出公干”与“PO切换”引起的数据冲突"
 
 
 enum ENUM_EXPORT_XLS_TYPE

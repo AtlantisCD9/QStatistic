@@ -301,6 +301,7 @@ void FpDataProc::procDataForCollection()
     QDate endTemp;
     if (!getAndCheckCurMonth(startTemp,endTemp))
     {
+        QMessageBox::critical(0,"Error","工时表中存在其他月份的工时记录，请检查“异常工时处理表”中是否存在异常！");
         return;
     }
     //若成功，则赋值到m_strDateMonth
@@ -813,7 +814,7 @@ void FpDataProc::addInfoIntoDutyDetailByProcAbnormalDetail()
 //                " a.name,'--','--',a.collaboration_type,a.ID_number,a.POID, "
 //                " '#TIMEFLAG#',-1,-1,0,0,0,0 "
 //            " FROM duty_detail AS a,proc_abnormal_detail AS b "
-//            " WHERE a.ID_number = b.ID_number";
+//            " WHERE a.ID_number = b.ID_number And a.POID = b.POID";
     m_pFpDbProc->getBaseInfoInProcAbnormalDetailFromMemDb(lstStrLstContent);
 
     foreach (QList<QVariant> lstContent,lstStrLstContent)
@@ -949,9 +950,9 @@ int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateT
 {
     //这里对8:00~12:00 13:30~17:30为有效时间进行计算工时，最后再用8小时去减得到异常工时
     int tmpStart = 0;
-    if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(8,0))) > 0)
+    if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(9,1))) > 0)
     {
-        //如果dtStart早于8点，那么就以8点开始算
+        //如果dtStart早于9点，那么就以8点开始算，因为涉及弹性工时
         dtStart = QDateTime(dtTimeFlag.date(),QTime(8,0));
     }
     else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0))) > 0)
@@ -960,7 +961,7 @@ int FpDataProc::getAbnormalHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateT
         tmpStart = dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0)));
         dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
     }
-    else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(13,30))) > 0)
+    else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(13,31))) > 0)
     {
         //如果dtStart晚于12点，但早于13:30，那么就以13:30开始算
         dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
@@ -1028,7 +1029,7 @@ int FpDataProc::getPunchInHours(QDateTime dtTimeFlag, QDateTime dtStart, QDateTi
         tmpStart = dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(12,0)));
         dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
     }
-    else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(13,30))) > 0)
+    else if (dtStart.secsTo(QDateTime(dtTimeFlag.date(),QTime(13,31))) > 0)
     {
         dtStart = QDateTime(dtTimeFlag.date(),QTime(13,30));
     }

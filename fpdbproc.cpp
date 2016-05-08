@@ -351,7 +351,7 @@ bool FpDbProc::getBaseInfoInProcAbnormalDetailFromMemDb(QList<QList<QVariant> > 
                 " a.name,'--','--',a.collaboration_type,a.ID_number,a.POID, "
                 " '#TIMEFLAG#',-1,-1,0,0,0,0 "
             " FROM duty_detail AS a,proc_abnormal_detail AS b "
-            " WHERE a.ID_number = b.ID_number";
+            " WHERE a.ID_number = b.ID_number And a.POID = b.POID";
     return dbOper->dbQureyData(strSql,lstStrLstContent);//ID of timeflag=12
 }
 
