@@ -29,11 +29,11 @@ public:
     bool initPoSwitchMemDb();
 
     //将工时明细导入内存数据库
-    bool setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent,QString &dbErrorInfo);
     //将异常工时处理导入内存数据库
-    bool setProcAbnormalDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool setProcAbnormalDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent,QString &dbErrorInfo);
     //将Po切换信息内存数据库
-    bool setPoSwitchIntoMemDb(QList<QList<QVariant> > &lstStrLstContent);
+    bool setPoSwitchIntoMemDb(QList<QList<QVariant> > &lstStrLstContent,QString &dbErrorInfo);
 
     //刷新加班工时，超过8小时的，按照8小时计算，同时刷新折现工时
     bool updateDutyOverHours();
@@ -99,7 +99,7 @@ public:
 
 private:
     bool getWorkDaysFromDb(QList<QList<QVariant> > &lstStrLstContent,DbOper *argDbOper);
-    bool setWorkDaysIntoDb(QList<QList<QVariant> > &lstStrLstContent,DbOper *argDbOper);
+    bool setWorkDaysIntoDb(QList<QList<QVariant> > &lstStrLstContent,DbOper *argDbOper,QString &dbErrorInfo);
 
     //初始化工时明细表
     bool initDutyDetailDb(DbOper *argDbOper);

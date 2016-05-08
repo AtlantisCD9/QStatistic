@@ -19,7 +19,7 @@ public:
     bool dbQureyExec(QString &sqlStr);
 
     bool dbQureyData(QString &sqlStr,QList<QList<QVariant> > &lstRowsAllData);
-    bool dbInsertData(QString &sqlStr, QList<QList<QVariant> > &lstRowsAllData);
+    bool dbInsertData(QString &sqlStr, QList<QList<QVariant> > &lstRowsAllData,QString &dbErrorInfo);
 
     QStringList tablesInDb();
 

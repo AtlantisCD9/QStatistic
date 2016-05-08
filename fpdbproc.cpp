@@ -306,31 +306,31 @@ bool FpDbProc::initPoSwitchMemDb()
     return initPoSwitchDb(m_pDbOperMem);
 }
 
-bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
+bool FpDbProc::setDutyDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent, QString &dbErrorInfo)
 {
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
     strSql = "INSERT INTO duty_detail VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-    return dbOper->dbInsertData(strSql,lstStrLstContent);
+    return dbOper->dbInsertData(strSql,lstStrLstContent,dbErrorInfo);
 }
 
-bool FpDbProc::setProcAbnormalDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
+bool FpDbProc::setProcAbnormalDetailIntoMemDb(QList<QList<QVariant> > &lstStrLstContent, QString &dbErrorInfo)
 {
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
     strSql = "INSERT INTO proc_abnormal_detail VALUES(?,?,?,?,?,?,?,?,?,?,?)";
-    return dbOper->dbInsertData(strSql,lstStrLstContent);
+    return dbOper->dbInsertData(strSql,lstStrLstContent,dbErrorInfo);
 }
 
-bool FpDbProc::setPoSwitchIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
+bool FpDbProc::setPoSwitchIntoMemDb(QList<QList<QVariant> > &lstStrLstContent, QString &dbErrorInfo)
 {
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
     strSql = "INSERT INTO po_switch VALUES(?,?,?,?,?)";
-    return dbOper->dbInsertData(strSql,lstStrLstContent);
+    return dbOper->dbInsertData(strSql,lstStrLstContent,dbErrorInfo);
 }
 
 bool FpDbProc::updateDutyOverHours()
@@ -430,21 +430,23 @@ bool FpDbProc::updateDutyPersonalSumByPoSwitchMemDb()
 
 bool FpDbProc::setWorkDaysIntoMemDb(QList<QList<QVariant> > &lstStrLstContent)
 {
-    return setWorkDaysIntoDb(lstStrLstContent,m_pDbOperMem);
+    QString dbErrorInfo;
+    return setWorkDaysIntoDb(lstStrLstContent,m_pDbOperMem,dbErrorInfo);
 }
 
 bool FpDbProc::setWorkDaysIntoLocalDb(QList<QList<QVariant> > &lstStrLstContent)
 {
-    return setWorkDaysIntoDb(lstStrLstContent,m_pDbOperLocal);
+    QString dbErrorInfo;
+    return setWorkDaysIntoDb(lstStrLstContent,m_pDbOperLocal,dbErrorInfo);
 }
 
-bool FpDbProc::setWorkDaysIntoDb(QList<QList<QVariant> > &lstStrLstContent, DbOper *argDbOper)
+bool FpDbProc::setWorkDaysIntoDb(QList<QList<QVariant> > &lstStrLstContent, DbOper *argDbOper, QString &dbErrorInfo)
 {
     QString strSql;
     DbOper *dbOper = argDbOper;
 
     strSql = "INSERT INTO days_payroll_multi VALUES(?,?)";
-    return dbOper->dbInsertData(strSql,lstStrLstContent);
+    return dbOper->dbInsertData(strSql,lstStrLstContent,dbErrorInfo);
 }
 
 bool FpDbProc::getWorkDaysFromMemDb(QList<QList<QVariant> > &lstStrLstContent)

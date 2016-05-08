@@ -267,9 +267,12 @@ void FpDataProc::procDataAbnormal()
         if(dtTimeFlag.date() != dtStart.date() || dtTimeFlag.date() != dtEnd.date())
         {
             QMessageBox::information(0,"ERROR",
-                                     QString("异常工时处理表单，存在开始和结束时间不是同一天\nPO号码：%1\n姓名：%2\n该条记录不能被处理")
+                                     QString("异常工时处理表单，存在开始和结束时间不是同一天\nPO号码：%1\n姓名：%2\n上班时间：%3\n下班时间：%4\n工班日期：%5\n该条记录不能被处理")
                                      .arg(m_lstRowLstColumnAbnormal[i][poID].toString())
-                                     .arg(m_lstRowLstColumnAbnormal[i][name].toString()));
+                                     .arg(m_lstRowLstColumnAbnormal[i][name].toString())
+                                     .arg(dtStart.toString("yyyy-MM-dd hh:mm:ss"))
+                                     .arg(dtEnd.toString("yyyy-MM-dd hh:mm:ss"))
+                                     .arg(dtTimeFlag.toString("yyyy-MM-dd hh:mm:ss")));
             break;
         }
 
@@ -594,6 +597,121 @@ void FpDataProc::procDataForCollection()
 
 }
 
+void FpDataProc::procDataFormat(ENUM_IMPORT_XLS_TYPE import_type)
+{
+    switch(import_type)
+    {
+    case IM_DETAIL:
+//        m_pFpExcelProc->getDataFromExcel(inPutFile,m_lstTitleDetail,m_lstRowLstColumnDetail,
+//                                         titleEnd,sheetID,columnNum);
+        break;
+    case IM_ABNORMAL:
+    {
+        //        "    POID                VCHAR,            "
+        //        "    name                VCHAR,            "
+        //        "    ID_number           VCHAR Not Null,   "
+        //        "    on_duty             DATETIME,         "
+        //        "    off_duty            DATETIME,         "
+        //        "    remark              VCHAR,            "
+        //        "    timeflag            DATETIME Not Null,"
+        //        "    punch_type          INT,              "
+        //        "    abnormal_hours      DOUBLE,           "
+        //        "    punch_hours         DOUBLE,           "
+        //        "    payroll_multi       INT,              "
+        const int i_POID = 0;
+        const int i_ID_number = 2;
+        const int i_on_duty = 3;
+        const int i_off_duty = 4;
+        for(int i=0;i < m_lstRowLstColumnAbnormal.size();++i)
+        {
+            QList<QVariant> &lst_col= m_lstRowLstColumnAbnormal[i];
+
+            if (lst_col[i_POID].type() == QVariant::Double)
+            {
+                lst_col[i_POID] = QVariant(QString::number(lst_col[i_POID].toDouble(),'g',18));
+            }
+            else
+            {
+                lst_col[i_POID] = QVariant(lst_col[i_POID].toString().trimmed());
+            }
+
+            if (lst_col[i_ID_number].type() == QVariant::Double)
+            {
+                lst_col[i_ID_number] = QVariant(QString::number(lst_col[i_ID_number].toDouble(),'g',18));
+            }
+            else
+            {
+                lst_col[i_ID_number] = QVariant(lst_col[i_ID_number].toString().trimmed());
+            }
+
+            if (lst_col[i_on_duty].type() == QVariant::String && 1 == lst_col[i_on_duty].toString().count(":"))
+            {
+                lst_col[i_on_duty] = QVariant(lst_col[i_on_duty].toString().trimmed()+":00");
+            }
+
+            if (lst_col[i_off_duty].type() == QVariant::String && 1 == lst_col[i_off_duty].toString().count(":"))
+            {
+                lst_col[i_off_duty] = QVariant(lst_col[i_off_duty].toString().trimmed()+":00");
+            }
+        }
+        break;
+    }
+    case IM_PO_SWITCH:
+    {
+//        "    new_POID            VCHAR Not Null,   "
+//        "    old_POID            VCHAR,            "
+//        "    name                VCHAR,            "
+//        "    ID_number           VCHAR Not Null,   "
+//        "    new_start_date      DATETIME Not Null,"
+        const int i_new_POID = 0;
+        const int i_old_POID = 1;
+        const int i_ID_number = 3;
+        const int i_new_start_date = 4;
+
+        for(int i=0;i < m_lstRowLstColumnPOSwitch.size();++i)
+        {
+            QList<QVariant> &lst_col= m_lstRowLstColumnPOSwitch[i];
+
+            if (lst_col[i_new_POID].type() == QVariant::Double)
+            {
+                lst_col[i_new_POID] = QVariant(QString::number(lst_col[i_new_POID].toDouble(),'g',18));
+            }
+            else
+            {
+                lst_col[i_new_POID] = QVariant(lst_col[i_new_POID].toString().trimmed());
+            }
+
+            if (lst_col[i_old_POID].type() == QVariant::Double)
+            {
+                lst_col[i_old_POID] = QVariant(QString::number(lst_col[i_old_POID].toDouble(),'g',18));
+            }
+            else
+            {
+                lst_col[i_old_POID] = QVariant(lst_col[i_old_POID].toString().trimmed());
+            }
+
+            if (lst_col[i_ID_number].type() == QVariant::Double)
+            {
+                lst_col[i_ID_number] = QVariant(QString::number(lst_col[i_ID_number].toDouble(),'g',18));
+            }
+            else
+            {
+                lst_col[i_ID_number] = QVariant(lst_col[i_ID_number].toString().trimmed());
+            }
+
+            if (lst_col[i_new_start_date].type() == QVariant::String && 1 == lst_col[i_new_start_date].toString().count(":"))
+            {
+                lst_col[i_new_start_date] = QVariant(lst_col[i_new_start_date].toString().trimmed()+":00");
+            }
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+}
+
 bool FpDataProc::getDataFromExcel(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum, ENUM_IMPORT_XLS_TYPE import_type)
 {
     switch(import_type)
@@ -605,6 +723,14 @@ bool FpDataProc::getDataFromExcel(QString &inPutFile, int &titleEnd, int &sheetI
     case IM_ABNORMAL:
         m_pFpExcelProc->getDataFromExcel(inPutFile,m_lstTitleAbnormal,m_lstRowLstColumnAbnormal,
                                          titleEnd,sheetID,columnNum);
+//        foreach(QList<QVariant> lstColumnAbnormal,m_lstRowLstColumnAbnormal)
+//        {
+//            foreach(QVariant abnormal,lstColumnAbnormal)
+//            {
+//                qDebug() << abnormal;
+//            }
+//            qDebug() << "------------------------------";
+//        }
         break;
     case IM_PO_SWITCH:
         m_pFpExcelProc->getDataFromExcel(inPutFile,m_lstTitlePOSwitch,m_lstRowLstColumnPOSwitch,
@@ -829,7 +955,19 @@ void FpDataProc::addInfoIntoDutyDetailByProcAbnormalDetail()
         }
     }
 
-    m_pFpDbProc->setDutyDetailIntoMemDb(lstStrLstDutyDetail);
+    QString dbErrorInfo;
+    foreach (QList<QVariant> lstDutyDetail,lstStrLstDutyDetail)
+    {
+        QList<QList<QVariant> > lstLstDutyDetail;
+        lstLstDutyDetail << lstDutyDetail;
+        if (!m_pFpDbProc->setDutyDetailIntoMemDb(lstLstDutyDetail,dbErrorInfo))
+        {
+            //QMessageBox::critical(0,"DB Error",dbErrorInfo);
+            qDebug() << lstLstDutyDetail[0];
+        }
+    }
+
+
 }
 
 void FpDataProc::updateDutyDetailByProcAbnormalDetail()
@@ -864,7 +1002,13 @@ void FpDataProc::setProcAbnormalDetail()
         qDebug() << "Db Open Failed";
         return;
     }
-    m_pFpDbProc->setProcAbnormalDetailIntoMemDb(m_lstRowLstColumnAbnormal);
+
+    QString dbErrorInfo;
+    if (!m_pFpDbProc->setProcAbnormalDetailIntoMemDb(m_lstRowLstColumnAbnormal,dbErrorInfo))
+    {
+        QMessageBox::critical(0,"DB Error",dbErrorInfo);
+    }
+
 }
 
 void FpDataProc::setPoSwtich()
@@ -879,7 +1023,13 @@ void FpDataProc::setPoSwtich()
         qDebug() << "Db Open Failed";
         return;
     }
-    m_pFpDbProc->setPoSwitchIntoMemDb(m_lstRowLstColumnPOSwitch);
+
+    QString dbErrorInfo;
+    if (!m_pFpDbProc->setPoSwitchIntoMemDb(m_lstRowLstColumnPOSwitch,dbErrorInfo))
+    {
+        QMessageBox::critical(0,"DB Error",dbErrorInfo);
+    }
+
 }
 
 void FpDataProc::setDutyDetail()
@@ -894,7 +1044,12 @@ void FpDataProc::setDutyDetail()
         qDebug() << "Db Open Failed";
         return;
     }
-    m_pFpDbProc->setDutyDetailIntoMemDb(m_lstRowLstColumnDetail);
+
+    QString dbErrorInfo;
+    if (!m_pFpDbProc->setDutyDetailIntoMemDb(m_lstRowLstColumnDetail,dbErrorInfo))
+    {
+        QMessageBox::critical(0,"DB Error",dbErrorInfo);
+    }
     m_pFpDbProc->updateDutyOverHours();
 }
 

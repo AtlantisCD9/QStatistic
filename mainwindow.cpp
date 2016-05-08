@@ -297,6 +297,9 @@ void MainWindow::onImportFile()
     m_pFpDataProc->initial(import_type);
     m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,import_type);
 
+    //格式化输入格式，过滤异常输入
+    m_pFpDataProc->procDataFormat(import_type);
+
     switch(import_type)
     {
     case IM_DETAIL:
@@ -326,6 +329,8 @@ void MainWindow::onImportFile()
         break;
     }
 
+    QMessageBox::information(this,"提示","表格导入完成");
+
 }
 
 void MainWindow::onMergeFile()
@@ -352,6 +357,8 @@ void MainWindow::onMergeFile()
 //    qDebug() << columnNum;
 
     m_pFpDataProc->mergeExcel(lstMergeFile,outPutFile,headEnd,sheetID,columnNum);
+
+    QMessageBox::information(this,"提示","表格合并完成");
 }
 
 void MainWindow::onExportFile()
@@ -374,6 +381,8 @@ void MainWindow::onExportFile()
     }
 
     m_pFpDataProc->setDataIntoExcel(outPutFile,sheetID);
+
+    QMessageBox::information(this,"提示","表格导出完成");
 
 }
 

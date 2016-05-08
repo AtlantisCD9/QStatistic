@@ -23,6 +23,9 @@ public:
     void procDataAbnormal();
     void procDataForCollection();
 
+    //Format proc
+    void procDataFormat(ENUM_IMPORT_XLS_TYPE import_type);
+
     //Excel proc
     bool getDataFromExcel(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum,
                           ENUM_IMPORT_XLS_TYPE import_type);

@@ -7,8 +7,8 @@
 //#define DB_NAME "myTest.db"
 
 
-#define FP_VERSION_NUM "1.0.0.5"
-#define FP_VERSION_INFO "1、修复“外出公干”与“PO切换”引起的数据冲突"
+#define FP_VERSION_NUM "1.0.0.6"
+#define FP_VERSION_INFO "1、增加插入数据库出错的报错信息;\n2、针对身份证号码、PO号和日期等格式问题，做格式化处理;\n3、导入完成后，新增提示"
 
 
 enum ENUM_EXPORT_XLS_TYPE

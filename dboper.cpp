@@ -68,7 +68,7 @@ bool DbOper::dbQureyData(QString &sqlStr, QList<QList<QVariant> > &lstRowsAllDat
     return true;
 }
 
-bool DbOper::dbInsertData(QString &sqlStr, QList<QList<QVariant> > &lstRowsAllData)
+bool DbOper::dbInsertData(QString &sqlStr, QList<QList<QVariant> > &lstRowsAllData, QString &dbErrorInfo)
 {
     QSqlQuery sqlQuery(*m_pSqlDb);
     sqlQuery.prepare(sqlStr);
@@ -99,6 +99,7 @@ bool DbOper::dbInsertData(QString &sqlStr, QList<QList<QVariant> > &lstRowsAllDa
     if (!sqlQuery.execBatch(QSqlQuery::ValuesAsRows))
     {
         qDebug() << sqlQuery.lastError();
+        dbErrorInfo = sqlQuery.lastError().text();
         return false;
     }
 
