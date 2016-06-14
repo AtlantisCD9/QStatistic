@@ -422,7 +422,7 @@ bool FpDbProc::updateDutyPersonalSumByPoSwitchMemDb()
             "SELECT a.company,a.area,a.product_line,a.POID,a.ID_number,a.name,date(b.new_start_date) AS start_date,a.end_date "
             "FROM duty_personal_sum AS a,po_switch AS b "
             " WHERE a.ID_number = b.ID_number AND a.POID = b.new_POID "
-            " AND a.start_date < b.new_start_date AND a.end_date >= b.new_start_date ";
+            " AND a.start_date < date(b.new_start_date) AND a.end_date >= date(b.new_start_date) ";
     retRes = retRes && dbOper->dbQureyExec(strSql);
 
     return retRes;

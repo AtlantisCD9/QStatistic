@@ -641,7 +641,7 @@ void FpDataProc::procDataFormat(ENUM_IMPORT_XLS_TYPE import_type)
             }
             else
             {
-                lst_col[i_ID_number] = QVariant(lst_col[i_ID_number].toString().trimmed());
+                lst_col[i_ID_number] = QVariant(lst_col[i_ID_number].toString().toUpper().trimmed());
             }
 
             if (lst_col[i_on_duty].type() == QVariant::String && 1 == lst_col[i_on_duty].toString().count(":"))
@@ -696,7 +696,7 @@ void FpDataProc::procDataFormat(ENUM_IMPORT_XLS_TYPE import_type)
             }
             else
             {
-                lst_col[i_ID_number] = QVariant(lst_col[i_ID_number].toString().trimmed());
+                lst_col[i_ID_number] = QVariant(lst_col[i_ID_number].toString().toUpper().trimmed());
             }
 
             if (lst_col[i_new_start_date].type() == QVariant::String && 1 == lst_col[i_new_start_date].toString().count(":"))

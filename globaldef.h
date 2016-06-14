@@ -7,8 +7,8 @@
 //#define DB_NAME "myTest.db"
 
 
-#define FP_VERSION_NUM "1.0.0.6"
-#define FP_VERSION_INFO "1、增加插入数据库出错的报错信息;\n2、针对身份证号码、PO号和日期等格式问题，做格式化处理;\n3、导入完成后，新增提示"
+#define FP_VERSION_NUM "1.0.0.7"
+#define FP_VERSION_INFO "1、增加PO切换时，对日期格式的统一;\n2、增加针对身份证号码的大小写格式统一"
 
 
 enum ENUM_EXPORT_XLS_TYPE
