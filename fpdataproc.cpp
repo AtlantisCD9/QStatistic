@@ -1008,7 +1008,7 @@ void FpDataProc::setProcAbnormalDetail()
     QString dbErrorInfo;
     if (!m_pFpDbProc->setProcAbnormalDetailIntoMemDb(m_lstRowLstColumnAbnormal,dbErrorInfo))
     {
-        QMessageBox::critical(0,"DB Error",dbErrorInfo);
+        QMessageBox::critical(0,"DB Error proc_abnormal_detail",dbErrorInfo);
     }
 
 }
@@ -1029,7 +1029,7 @@ void FpDataProc::setPoSwtich()
     QString dbErrorInfo;
     if (!m_pFpDbProc->setPoSwitchIntoMemDb(m_lstRowLstColumnPOSwitch,dbErrorInfo))
     {
-        QMessageBox::critical(0,"DB Error",dbErrorInfo);
+        QMessageBox::critical(0,"DB Error po_switch",dbErrorInfo);
     }
 
 }
@@ -1050,7 +1050,7 @@ void FpDataProc::setDutyDetail()
     QString dbErrorInfo;
     if (!m_pFpDbProc->setDutyDetailIntoMemDb(m_lstRowLstColumnDetail,dbErrorInfo))
     {
-        QMessageBox::critical(0,"DB Error",dbErrorInfo);
+        QMessageBox::critical(0,"DB Error duty_detail",dbErrorInfo);
     }
     m_pFpDbProc->updateDutyOverHours();
 }

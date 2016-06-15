@@ -279,58 +279,48 @@ void MainWindow::onImportFile()
         return;
     }
 
-    QString inPutFile;
-    int headEnd;
-    int sheetID;
-    int columnNum;
-    ENUM_IMPORT_XLS_TYPE import_type;
+    QList<ENUM_IMPORT_XLS_TYPE> lst_import_type;
+    lst_import_type << IM_DETAIL;
+    lst_import_type << IM_ABNORMAL;
+    lst_import_type << IM_PO_SWITCH;
 
-//    qDebug() << m_mergeXls->getInfo(lstMergeFile,outPutFile,headEnd);
-//    qDebug() << lstMergeFile;
-//    qDebug() << outputFile;
-//    qDebug() << headEnd;
-    if(!m_importXls->getInfo(inPutFile,headEnd,sheetID,columnNum,import_type))
+    foreach(ENUM_IMPORT_XLS_TYPE import_type,lst_import_type)
     {
-        return;
-    }
+        QString inPutFile;
+        int headEnd;
+        int sheetID;
+        int columnNum;
 
-    m_pFpDataProc->initial(import_type);
-    m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,import_type);
+        if(!m_importXls->getInfo(inPutFile,headEnd,sheetID,columnNum,import_type))
+        {
+            continue;
+        }
 
-    //格式化输入格式，过滤异常输入
-    m_pFpDataProc->procDataFormat(import_type);
+        m_pFpDataProc->initial(import_type);
+        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,import_type);
 
-    switch(import_type)
-    {
-    case IM_DETAIL:
-//        m_pFpDataProc->initial(IM_DETAIL);
-//        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_DETAIL);
+        //格式化输入格式，过滤异常输入
+        m_pFpDataProc->procDataFormat(import_type);
 
-        m_pFpDataProc->procDataForDatail();
-        m_pFpDataProc->setDutyDetail();
-        break;
-    case IM_ABNORMAL:
-//        m_pFpDataProc->initial(IM_ABNORMAL);
-//        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_ABNORMAL);
-
-        m_pFpDataProc->procDataAbnormal();
-        m_pFpDataProc->setProcAbnormalDetail();
-        break;
-    case IM_PO_SWITCH:
-//        m_pFpDataProc->initial(IM_PO_SWITCH);
-//        m_pFpDataProc->getDataFromExcel(inPutFile,headEnd,sheetID,columnNum,IM_PO_SWITCH);
-
-        m_pFpDataProc->setPoSwtich();
-        break;
-    case IM_STATISTICS:
-
-        break;
-    default:
-        break;
+        switch(import_type)
+        {
+        case IM_DETAIL:
+            m_pFpDataProc->procDataForDatail();
+            m_pFpDataProc->setDutyDetail();
+            break;
+        case IM_ABNORMAL:
+            m_pFpDataProc->procDataAbnormal();
+            m_pFpDataProc->setProcAbnormalDetail();
+            break;
+        case IM_PO_SWITCH:
+            m_pFpDataProc->setPoSwtich();
+            break;
+        default:
+            break;
+        }
     }
 
     QMessageBox::information(this,"提示","表格导入完成");
-
 }
 
 void MainWindow::onMergeFile()

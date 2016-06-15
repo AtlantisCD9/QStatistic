@@ -9,15 +9,12 @@ DialogImportXls::DialogImportXls(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->pushButton_in,SIGNAL(clicked()),
+    connect(ui->pushButton_in_detail,SIGNAL(clicked()),
             this,SLOT(onGetOpenFileName()));
-
-    connect(ui->radioButton_detail,SIGNAL(clicked()),
-            this,SLOT(onRefresh()));
-    connect(ui->radioButton_abnormal,SIGNAL(clicked()),
-            this,SLOT(onRefresh()));
-    connect(ui->radioButton_poSwitch,SIGNAL(clicked()),
-            this,SLOT(onRefresh()));
+    connect(ui->pushButton_in_abnormal,SIGNAL(clicked()),
+            this,SLOT(onGetOpenFileName()));
+    connect(ui->pushButton_in_poSwitch,SIGNAL(clicked()),
+            this,SLOT(onGetOpenFileName()));
 
     onRefresh();
 }
@@ -29,26 +26,40 @@ DialogImportXls::~DialogImportXls()
 
 bool DialogImportXls::getInfo(QString &inPutFile, int &titleEnd, int &sheetID, int &columnNum, ENUM_IMPORT_XLS_TYPE &type)
 {
-    if(ui->lineEdit_in->text().isEmpty())
+    switch(type)
     {
+    case IM_DETAIL:
+        if(ui->lineEdit_in_detail->text().isEmpty())
+        {
+            return false;
+        }
+        inPutFile = ui->lineEdit_in_detail->text();
+        titleEnd = ui->spinBox_titleEnd_detail->text().toInt();
+        sheetID = ui->spinBox_sheetID_detail->text().toInt();
+        columnNum = ui->spinBox_column_detail->text().toInt();
+        break;
+    case IM_ABNORMAL:
+        if(ui->lineEdit_in_abnormal->text().isEmpty())
+        {
+            return false;
+        }
+        inPutFile = ui->lineEdit_in_abnormal->text();
+        titleEnd = ui->spinBox_titleEnd_abnormal->text().toInt();
+        sheetID = ui->spinBox_sheetID_abnormal->text().toInt();
+        columnNum = ui->spinBox_column_abnormal->text().toInt();
+        break;
+    case IM_PO_SWITCH:
+        if(ui->lineEdit_in_poSwitch->text().isEmpty())
+        {
+            return false;
+        }
+        inPutFile = ui->lineEdit_in_poSwitch->text();
+        titleEnd = ui->spinBox_titleEnd_poSwitch->text().toInt();
+        sheetID = ui->spinBox_sheetID_poSwitch->text().toInt();
+        columnNum = ui->spinBox_column_poSwitch->text().toInt();
+        break;
+    default:
         return false;
-    }
-    inPutFile = ui->lineEdit_in->text();
-    titleEnd = ui->spinBox_titleEnd->text().toInt();
-    sheetID = ui->spinBox_sheetID->text().toInt();
-    columnNum = ui->spinBox_column->text().toInt();
-
-    if(ui->radioButton_detail->isChecked())
-    {
-        type = IM_DETAIL;
-    }
-    else if(ui->radioButton_abnormal->isChecked())
-    {
-        type = IM_ABNORMAL;
-    }
-    else
-    {
-        type = IM_PO_SWITCH;
     }
 
     return true;
@@ -56,6 +67,27 @@ bool DialogImportXls::getInfo(QString &inPutFile, int &titleEnd, int &sheetID, i
 
 void DialogImportXls::onGetOpenFileName()
 {
+    QLineEdit *curLineEdit;//ui->lineEdit_in_detail
+
+    QString senderName = sender()->objectName();
+
+    if (senderName.contains("detail"))
+    {
+        curLineEdit = ui->lineEdit_in_detail;
+    }
+    else if (senderName.contains("abnormal"))
+    {
+        curLineEdit = ui->lineEdit_in_abnormal;
+    }
+    else if (senderName.contains("poSwitch"))
+    {
+        curLineEdit = ui->lineEdit_in_poSwitch;
+    }
+    else
+    {
+        return;
+    }
+
     QString fileName;
     fileName = QFileDialog::getOpenFileName(0,
                                             tr("Import Excel"),
@@ -65,27 +97,20 @@ void DialogImportXls::onGetOpenFileName()
     if (fileName.isNull())
     {
         //user press cancel
-        ui->lineEdit_in->setText(QString());
+        curLineEdit->setText(QString());
         return;
     }
-    ui->lineEdit_in->setText(fileName);
+    curLineEdit->setText(fileName);
 }
 
 void DialogImportXls::onRefresh()
 {
-    if(ui->radioButton_detail->isChecked())
-    {
-        ui->spinBox_titleEnd->setValue(1);
-        ui->spinBox_column->setValue(12);
-    }
-    else if(ui->radioButton_abnormal->isChecked())
-    {
-        ui->spinBox_titleEnd->setValue(4);
-        ui->spinBox_column->setValue(6);
-    }
-    else
-    {
-        ui->spinBox_titleEnd->setValue(5);
-        ui->spinBox_column->setValue(5);
-    }
+    ui->spinBox_titleEnd_detail->setValue(1);
+    ui->spinBox_column_detail->setValue(12);
+
+    ui->spinBox_titleEnd_abnormal->setValue(4);
+    ui->spinBox_column_abnormal->setValue(6);
+
+    ui->spinBox_titleEnd_poSwitch->setValue(5);
+    ui->spinBox_column_poSwitch->setValue(5);
 }
