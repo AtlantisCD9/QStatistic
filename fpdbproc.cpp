@@ -355,14 +355,14 @@ bool FpDbProc::getBaseInfoInProcAbnormalDetailFromMemDb(QList<QList<QVariant> > 
     return dbOper->dbQureyData(strSql,lstStrLstContent);//ID of timeflag=12
 }
 
-bool FpDbProc::getTimeFlagNotInDetailInProcAbnormalDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent, const QString &IDNumber)
+bool FpDbProc::getTimeFlagNotInDetailInProcAbnormalDetailFromMemDb(QList<QList<QVariant> > &lstStrLstContent, const QString &POID, const QString &IDNumber)
 {
     QString strSql;
     DbOper *dbOper = m_pDbOperMem;
 
     strSql = QString("SELECT strftime('%Y-%m-%d', timeflag) FROM proc_abnormal_detail "
-                     " WHERE strftime('%Y-%m-%d', timeflag) NOT IN (SELECT strftime('%Y-%m-%d', timeflag) FROM duty_detail WHERE id_number = '%1') "
-                     " AND id_number = '%1'").arg(IDNumber);
+                     " WHERE strftime('%Y-%m-%d', timeflag) NOT IN (SELECT strftime('%Y-%m-%d', timeflag) FROM duty_detail WHERE id_number = '%1' AND POID = '%2') "
+                     " AND id_number = '%1' AND POID = '%2'").arg(IDNumber).arg(POID);
     return dbOper->dbQureyData(strSql,lstStrLstContent);
 }
 

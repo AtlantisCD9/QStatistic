@@ -6,11 +6,8 @@
 #define DB_NAME ":memory:"
 //#define DB_NAME "myTest.db"
 
-
-#define FP_VERSION_NUM "1.0.0.7"
-#define FP_VERSION_INFO "1、增加PO切换时，对日期格式的统一;\n2、增加针对身份证号码的大小写格式统一"
-
-
+#define FP_VERSION_NUM "1.0.0.8"
+#define FP_VERSION_INFO "1、修复同时出现“外出公干”和“PO切换”时产生外出公干工时归属PO错误的问题；\n2、调整导入界面，提高操作效率"
 
 enum ENUM_EXPORT_XLS_TYPE
 {

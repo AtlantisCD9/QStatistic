@@ -946,7 +946,9 @@ void FpDataProc::addInfoIntoDutyDetailByProcAbnormalDetail()
     foreach (QList<QVariant> lstContent,lstStrLstContent)
     {
         QList<QList<QVariant> > lstStrLstTimeflag;
-        m_pFpDbProc->getTimeFlagNotInDetailInProcAbnormalDetailFromMemDb(lstStrLstTimeflag,lstContent[timeflagID-2].toString());
+        m_pFpDbProc->getTimeFlagNotInDetailInProcAbnormalDetailFromMemDb(lstStrLstTimeflag,
+                                                                         lstContent[timeflagID-1].toString(),
+                                                                         lstContent[timeflagID-2].toString());
         foreach (QList<QVariant> lstTimeflag,lstStrLstTimeflag)
         {
             lstContent[timeflagID] = lstTimeflag[0];
